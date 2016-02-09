@@ -9,15 +9,6 @@ class TicTacToe(object):
         self.player_1 = Agent("Player 1", Sides.NOUGHT)
         self.player_2 = Agent("Player 2", Sides.CROSS)
 
-    # Formats the board state as a string replacing cell values with enum names
-    def __board_str(self):
-        return str('\n'.join([''.join(['{:8}'.format(Sides.token(item)) \
-                        for item in row]) for row in self.board]))
-
-    def __str__(self):
-        return "{0}, {1}\nBoard:\n{2}".format(self.player_1, self.player_2, \
-                        self.__board_str())
-
     def plot(self):
         fig = plt.figure("TicTacToe", figsize=[8,8], facecolor=(1,1,1))
         ax = fig.add_subplot(111, xticks=range(4), yticks=range(4),
