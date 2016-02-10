@@ -1,4 +1,7 @@
 import random
+import numpy as np
+from sides import Sides
+
 
 class Agent(object):
     def __init__(self, player_name, side):
@@ -9,7 +12,7 @@ class Agent(object):
         return self.player_name
 
     def move(self, board):
-        random_coord = (random.randint(0,2), random.randint(0,2))
-        board[random_coord] = self.side
-        return board
-
+        # Find empty cells and select one at random
+        empty_cells = np.transpose(np.nonzero(board == Sides.EMPTY))
+        cell = empty_cells[random.randint(0, len(empty_cells) - 1)]
+        return cell
