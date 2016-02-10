@@ -1,5 +1,5 @@
 import numpy as np
-from agent import Agent
+from agent import Agent, AgentRandom, AgentFirst
 from sides import Sides
 import mpl_plot
 
@@ -8,8 +8,8 @@ class TicTacToe(object):
     def __init__(self):
         self.n = 3
         self.board = np.zeros((self.n, self.n))
-        self.player_1 = Agent("Player 1", Sides.NOUGHT)
-        self.player_2 = Agent("Player 2", Sides.CROSS)
+        self.player_1 = AgentRandom("Player 1", Sides.NOUGHT)
+        self.player_2 = AgentFirst("Player 2", Sides.CROSS)
 
     def run(self):
         while self.play(self.player_1) and self.play(self.player_2):
