@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot
-from sides import Sides
+from rules import Sides
 
 def plot_board(board):
     n = board.shape[0]
