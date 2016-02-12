@@ -60,6 +60,3 @@ if __name__ == "__main__":
         ttt.run()
 
     # mpl_plot.plot_board(ttt.board)
-
-    # TODO: repeated runs, comparing wins for agent types
-    # TODO: agents are currently greedy, need to implement exploration/value

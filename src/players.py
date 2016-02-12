@@ -1,6 +1,8 @@
 import random
 from abc import ABCMeta, abstractmethod
 import rules
+from hashlib import sha1
+from numpy import all, array, uint8
 
 
 class Player(object):
@@ -100,11 +102,6 @@ class Agent04(Player):
             return tuple(empty_cells[random.randint(0, len(empty_cells) - 1)])
 
 
-from hashlib import sha1
-
-from numpy import all, array, uint8
-
-
 class Hashable(object):
     """
     Hashable wrapper for ndarray objects.
@@ -154,6 +151,8 @@ class Hashable(object):
 
 class ReinforcementAgent01(Player):
     """Agent that uses reinforcement learning to determine values for moves"""
+    DEFAULT_VALUE = 0.5
+
     def __init__(self, side, logger):
         super(ReinforcementAgent01, self).__init__(side, logger)
 
@@ -163,10 +162,12 @@ class ReinforcementAgent01(Player):
     def move(self, board):
         hashable = Hashable(board)
         if hashable in self.states:
-            self.logger.debug("State in list")
+            self.logger.info("State in list: {0}".format(self.states[hashable]))
+            # Adjust value
+            self.states[hashable] += 0.1
         else:
             self.logger.debug("State not in list")
-            self.states[hashable] = 1
+            self.states[hashable] = self.DEFAULT_VALUE
         # Choose a random empty cell
         empty_cells = rules.empty_cells(board)
         return tuple(empty_cells[random.randint(0, len(empty_cells) - 1)])
