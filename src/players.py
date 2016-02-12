@@ -4,11 +4,17 @@ import rules
 
 
 class Player(object):
-    """Abstract base class for agents"""
+    """Abstract base class for players"""
     __metaclass__ = ABCMeta
 
     def __init__(self, side):
-        self.side = side  # NOUGHT or CROSS
+        """
+        Constructor
+
+        :param side: Sides.noughts or Sides.crosses
+        :type side: int
+        """
+        self.side = side
 
     def __str__(self):
         return rules.Sides.side_name(self.side)
