@@ -1,71 +1,87 @@
 """
-This module contains methods relating to the rules of the game.
+This module contains methods defining the rules of the game.
 """
 import numpy as np
 
 
 class Sides(object):
-    EMPTY = 0
-    NOUGHT = 1
-    CROSS = -1
-    __tokens = {EMPTY: " ", NOUGHT: "o", CROSS: "x"}
+    empty = 0
+    noughts = 1
+    crosses = -1
+    __tokens = {empty: " ", noughts: "o", crosses: "x"}
 
-    # Returns the game token for a state given its value
     @staticmethod
     def token(value):
+        """Returns the game token for a state given its value"""
         try:
             return Sides.__tokens[value]
         except KeyError:
             return "?"
 
+    @staticmethod
+    def side_name(value):
+        """Returns the name of the side given its value"""
+        for x in Sides.__dict__:
+            if Sides.__dict__[x] == value:
+                return x
+
 
 def empty_cells(board):
-    # TODO: convert to array of tuples for easier use
-    return np.transpose(np.nonzero(board == Sides.EMPTY))
+    """
+    Returns a list of empty cells remaining on a board.
+
+    :param board: two dimensional array representing the current board
+    :type board: numpy.ndarray
+    :return: array containing the locations of empty cells as x,y pairs
+    :rtype: numpy.ndarray
+    """
+    # Get list of empty cells and transpose into list of x,y pairs
+    return np.transpose(np.nonzero(board == Sides.empty))
 
 
-"""
-Checks whether the given move results in a win.
-
-:param board: board state after the move has been mad
-:param move: a tuple with the coordinates of the new move (x, y)
-:type board: numpy.ndarray
-:type move: (int, int)
-:return: True if move results in a win, False otherwise
-"""
 def winning_move(board, move):
-    side = board[move]
+    """
+    Checks whether the given move results in a win.
+
+    Calculates the sum of the row, column and diagonals of the new move and compares
+    against the expected value for a full line, n.
+
+    :param board: two dimensional array representing the board after the move
+    :type board: numpy.ndarray
+    :param move: tuple with the coordinates of the new move (x, y)
+    :type move: (int, int)
+    :return: True if move results in a win, False otherwise
+    :rtype: boolean
+    """
     n = board.shape[0]
     x, y = move
-    full = abs(side * n)
 
-    # Check row
-    if abs(board[x].sum()) == full:
+    # Row
+    if abs(board[x].sum()) == n:
         return True
-    # Check column
-    elif abs(board[:,y].sum()) == full:
+    # Column
+    elif abs(board[:,y].sum()) == n:
         return True
-    # Check diagonal
-    elif x == y and abs(board.diagonal().sum()) == full:
+    # Diagonal
+    elif x == y and abs(board.diagonal().sum()) == n:
         return True
-    # Check anti-diagonal
-    elif x == (n - 1) - y and abs(np.fliplr(board).diagonal().sum()) == full:
+    # Anti-diagonal
+    elif x == (n - 1) - y and abs(np.fliplr(board).diagonal().sum()) == n:
         return True
     else:
         return False
 
 
-"""
-Checks whether the given move results in a draw.
+def draw(board):
+    """
+    Checks whether the given move results in a draw.
 
-:param board: board state after the move has been made
-:param move: a tuple with the coordinates of the new move (x, y)
-:type board: numpy.ndarray
-:type move: (int, int)
-:return: True if move results in a draw, False otherwise
-"""
-def draw(board, move):
-    if not Sides.EMPTY in board:
+    :param board: two dimensional array representing the board after the move
+    :type board: numpy.ndarray
+    :return: True if move results in a draw, False otherwise
+    :rtype: boolean
+    """
+    if not Sides.empty in board:
         # Board is full so game is a draw
         return True
     else:

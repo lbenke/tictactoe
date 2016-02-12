@@ -1,19 +1,17 @@
 import random
-import numpy as np
 from abc import ABCMeta, abstractmethod
 import rules
 
 
-# Abstract base class for agents
-class Agent(object):
+class Player(object):
+    """Abstract base class for agents"""
     __metaclass__ = ABCMeta
 
-    def __init__(self, player_name, side):
-        self.player_name = player_name
+    def __init__(self, side):
         self.side = side  # NOUGHT or CROSS
 
     def __str__(self):
-        return self.player_name
+        return rules.Sides.side_name(self.side)
 
     @abstractmethod
     def move(self, board):
@@ -24,12 +22,13 @@ class Agent(object):
         :param board: two dimensional array representing the current board
         :type board: numpy.ndarray
         :return: a tuple with the coordinates of the new move (x, y)
+        :rtype: (int, int)
         """
         pass
 
 
-# Agent that selects the first empty cell
-class Agent01(Agent):
+class Agent01(Player):
+    """Agent that selects the first empty cell"""
     def move(self, board):
         # Select the first empty cell
         empty_cells = rules.empty_cells(board)
@@ -37,17 +36,16 @@ class Agent01(Agent):
         return tuple(cell)
 
 
-# Agent that selects an empty cell at random
-class Agent02(Agent):
+class Agent02(Player):
+    """Agent that selects an empty cell at random"""
     def move(self, board):
         # Select an empty cell at random
         empty_cells = rules.empty_cells(board)
-        cell = empty_cells[random.randint(0, len(empty_cells) - 1)]
-        return tuple(cell)
+        return tuple(empty_cells[random.randint(0, len(empty_cells) - 1)])
 
 
-# Agent that checks for a winning move
-class Agent03(Agent):
+class Agent03(Player):
+    """Agent that checks for a winning move"""
     def move(self, board):
         empty_cells = rules.empty_cells(board)
 
@@ -60,13 +58,12 @@ class Agent03(Agent):
                 return cell
         else:
             # Otherwise pick a random cell
-            cell = empty_cells[random.randint(0, len(empty_cells) - 1)]
-            return tuple(cell)
+            return tuple(empty_cells[random.randint(0, len(empty_cells) - 1)])
 
 
-# Agent that checks for a winning move for itself, and blocks winning moves for
-# its opponent.
-class Agent04(Agent):
+class Agent04(Player):
+    """Agent that checks for a winning move for itself, and blocks winning
+    moves for its opponent"""
     def move(self, board):
         empty_cells = rules.empty_cells(board)
 
@@ -88,5 +85,10 @@ class Agent04(Agent):
                 return cell
         else:
             # Otherwise pick a random cell
-            cell = empty_cells[random.randint(0, len(empty_cells) - 1)]
-            return tuple(cell)
+            return tuple(empty_cells[random.randint(0, len(empty_cells) - 1)])
+
+
+class Human(Player):
+    """Player for human input via the command line"""
+    def move(self, board):
+        return tuple(map(int,raw_input("Cell: ").split(',')))
