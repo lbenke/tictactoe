@@ -33,8 +33,10 @@ class TicTacToe(object):
         winner = self.play()
 
         # Notify the players that the game has finished
-        self.player1.finish(winner)
-        self.player2.finish(winner)
+        self.player1.finish(winner is self.player1)
+        self.player2.finish(winner is self.player2)
+
+        return winner.side if winner else rules.EMPTY
 
     def play(self):
         """
@@ -81,9 +83,14 @@ class TicTacToe(object):
 
 
 if __name__ == "__main__":
-    ttt = TicTacToe(3, ReinforcementAgent, Agent03, logging.INFO)
+    ttt = TicTacToe(3, ReinforcementAgent, Agent03, logging.FATAL)
 
-    for _ in range(0, 1000):
-        ttt.run()
+    n = 1000
+    winner = 0
+
+    for _ in range(0, n):
+        winner += ttt.run()
+
+    print "Player won {0} out of {1} games.".format(winner, n)
 
     # mpl_plot.plot_board(ttt.board)
