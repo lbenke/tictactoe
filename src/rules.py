@@ -2,6 +2,7 @@
 This module contains methods defining the rules of the game.
 """
 import numpy as np
+import rules
 
 
 EMPTY = 0
@@ -42,7 +43,7 @@ def empty_cells(board):
     :rtype: numpy.ndarray
     """
     # Get list of empty cells and transpose into list of x,y pairs
-    return np.transpose(np.nonzero(board == Sides.EMPTY))
+    return np.transpose(np.nonzero(board == rules.EMPTY))
 
 
 def winning_move(board, move):

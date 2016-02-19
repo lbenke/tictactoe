@@ -166,11 +166,11 @@ class ReinforcementAgent(Player):
         hashable = Hashable(state)
         self.state_values[hashable] = value
 
-    def check_cell(self, cell, board):
+    def move_value(self, cell, board):
         """
-        Checks whether the specified cell represents a win or loss state and
-        assigns a value accordingly. States that have not been seen before are
-        given a default value.
+        Checks whether the specified move represents a win state and assigns a
+        value accordingly. States that have not been seen before are given a
+        default value.
 
         :param cell: a tuple with the coordinates of the new move (x, y)
         :type cell: (int, int)
@@ -180,32 +180,18 @@ class ReinforcementAgent(Player):
         """
         cell = tuple(cell)
         board = board.copy()
-
-        # Check if this is a winning move for the current player
         board[cell] = self.side
-        if rules.winning_move(board, cell):
-            # Automatically assign maximum value to winning states
-            self.set_value(board, self.MAX_VALUE)
-            self.logger.debug("Winning state, value set to maximum")
-            return self.MAX_VALUE
 
-        """
-        Do we care if this could be a winning move for the opponent?
-        We could give every other move in the list a zero?
-        """
-        # # Check if this is a winning move for the opponent
-        # board[cell] = rules.opponent(self.side)
-        # if rules.winning_move(board, cell):
-        #     self.set_value(board, self.MIN_VALUE)
-        #     self.logger.debug("Losing state, value set to minimum")
-        #     return self.MIN_VALUE
-
-        # Set the default value if the state has no value
-        board[cell] = self.side
+        # Check if this is a new state with no recorded value
         if not self.value(board):
-            self.set_value(board, self.DEFAULT_VALUE)
-            self.logger.debug("State not in list, value set to default")
-            return self.DEFAULT_VALUE
+            # Check if this is a winning move for the player
+            if rules.winning_move(board, cell):
+                # Assign maximum value to the state
+                self.set_value(board, self.MAX_VALUE)
+                self.logger.debug("Winning state, value set to maximum")
+            else:
+                self.set_value(board, self.DEFAULT_VALUE)
+                self.logger.debug("State not in list, value set to default")
 
         return self.value(board)
 
@@ -230,19 +216,25 @@ class ReinforcementAgent(Player):
         """
         # Look up possible moves in known state values list
         empty_cells = rules.empty_cells(board)
-        moves = []  # [(cell, value)]
+        import numpy as np
+        moves = []  # [[cell, value]]
         for cell in empty_cells:
-            moves.append(cell, self.check_cell(cell, board))
-        # Sort moves by value so we can choose first for exploit
+            moves.append([cell, self.move_value(cell, board)])
+
+        # Sort moves by value so we can choose first when exploiting
+        # Sorted in ascending order so the last element has the highest value
+        moves = np.asarray(moves)
+        moves = moves[moves[:,1].argsort()]
+        self.logger.debug("Moves:\n{0}".format(moves))
 
         # Choose either highest value (exploit) or random cell (explore)
         if self.state == self.EXPLOITING:
             # Choose the cell that has the highest value
-            cell = tuple(moves[0])
+            cell = tuple(moves[len(moves) - 1][0])
         elif self.state == self.EXPLORING:
             # Choose a random cell that does not have the highest value
-            i = random.randint(1, len(moves) - 2)
-            cell = tuple(moves[i])
+            i = random.randint(0, len(moves) - 2)
+            cell = tuple(moves[i][0])
         else:
             raise ValueError("State is unexpected value: {0}".format(
                 self.state))

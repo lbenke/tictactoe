@@ -81,9 +81,9 @@ class TicTacToe(object):
 
 
 if __name__ == "__main__":
-    ttt = TicTacToe(3, ReinforcementAgent, Agent04, logging.INFO)
+    ttt = TicTacToe(3, ReinforcementAgent, Agent03, logging.INFO)
 
-    for _ in range(0, 3):
+    for _ in range(0, 1000):
         ttt.run()
 
     # mpl_plot.plot_board(ttt.board)

@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot
-from rules import Sides
+import rules
 
 def plot_board(board):
     n = board.shape[0]
@@ -28,9 +28,9 @@ def plot_board(board):
                 'horizontalalignment': "center",
                 'verticalalignment': 'center'}
     for (x, y), value in np.ndenumerate(board):
-        if value == Sides.NOUGHT:
-            pyplot.text(y + 0.5, n - x - 0.5, Sides.token(value), font_blue)
+        if value == rules.NOUGHT:
+            pyplot.text(y + 0.5, n - x - 0.5, rules.token(value), font_blue)
         else:
-            pyplot.text(y + 0.5, n - x - 0.5, Sides.token(value), font_red)
+            pyplot.text(y + 0.5, n - x - 0.5, rules.token(value), font_red)
 
     pyplot.show()
