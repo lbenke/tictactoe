@@ -94,3 +94,11 @@ def draw(board):
     else:
         # Board is full so game is a draw
         return True
+
+
+def board_str(board):
+        """ Formats a board state as a string replacing cell values with
+        enum names """
+        # Join columns using '|' and rows using line-feeds
+        return str('\n'.join(['|'.join([rules.token(item) for item in row])
+                for row in board]))

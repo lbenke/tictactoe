@@ -2,6 +2,7 @@ import random
 from abc import ABCMeta, abstractmethod
 import rules
 from utils import Hashable
+from collections import OrderedDict
 
 
 class Player(object):
@@ -117,9 +118,9 @@ class Agent04(Player):
 
 class ReinforcementAgent(Player):
     """Agent that uses reinforcement learning to determine values for moves"""
-    DEFAULT_VALUE = 0.5
-    MAX_VALUE = 1.0
-    MIN_VALUE = 0.0
+    DEFAULT_VALUE = 0.0
+    MAX_VALUE = 10.0  # TODO: fix value adjustments
+    MIN_VALUE = -10.0  # TODO: unusued
 
     # Agent states
     EXPLOITING = 0
@@ -130,7 +131,7 @@ class ReinforcementAgent(Player):
 
         # Dict of state values; key is table at state, value is probability that
         # state will lead to a winning move
-        self.state_values = {}
+        self.state_values = OrderedDict()
 
         # List of moves in the current game, used to make value assessments
         # Each move is recorded as a board state
@@ -186,12 +187,11 @@ class ReinforcementAgent(Player):
         if not self.value(board):
             # Check if this is a winning move for the player
             if rules.winning_move(board, cell):
-                # Assign maximum value to the state
-                self.set_value(board, self.MAX_VALUE)
+                # Return maximum value to the state
                 self.logger.debug("Winning state, value set to maximum")
+                return self.MAX_VALUE
             else:
-                self.set_value(board, self.DEFAULT_VALUE)
-                self.logger.debug("State not in list, value set to default")
+                return self.DEFAULT_VALUE
 
         return self.value(board)
 
@@ -217,24 +217,34 @@ class ReinforcementAgent(Player):
         # Look up possible moves in known state values list
         empty_cells = rules.empty_cells(board)
         import numpy as np
-        moves = []  # [[cell, value]]
+        possible_moves = []  # [[cell, value]]
         for cell in empty_cells:
-            moves.append([cell, self.move_value(cell, board)])
+            possible_moves.append([cell, self.move_value(cell, board)])
 
         # Sort moves by value so we can choose first when exploiting
         # Sorted in ascending order so the last element has the highest value
-        moves = np.asarray(moves)
-        moves = moves[moves[:,1].argsort()]
-        self.logger.debug("Moves:\n{0}".format(moves))
+        # TODO: this will always choose the last cell if values are equal
+        # e.g. first move will always be bottom right since it's last in the
+        # list of empty cells
+        # Adding exploration will fix this but should there be a random choice
+        # between equally-valued cells? See TO DO below
+        possible_moves = np.asarray(possible_moves)
+        possible_moves = possible_moves[possible_moves[:,1].argsort()]
+        self.logger.debug("Moves:\n{0}".format(possible_moves))
 
         # Choose either highest value (exploit) or random cell (explore)
         if self.state == self.EXPLOITING:
-            # Choose the cell that has the highest value
-            cell = tuple(moves[len(moves) - 1][0])
+            # Find the highest value and get all free cells with this value,
+            # then choose one at random
+            best_value = possible_moves[-1][1]
+            best_cells = [x[0] for x in possible_moves if x[1] == best_value]
+            i = random.randint(0, len(best_cells) - 1)
+            cell = tuple(best_cells[i])
         elif self.state == self.EXPLORING:
             # Choose a random cell that does not have the highest value
-            i = random.randint(0, len(moves) - 2)
-            cell = tuple(moves[i][0])
+            # TODO: weight other moves according to value
+            i = random.randint(0, len(possible_moves) - 2)
+            cell = tuple(possible_moves[i][0])
         else:
             raise ValueError("State is unexpected value: {0}".format(
                 self.state))
@@ -254,16 +264,15 @@ class ReinforcementAgent(Player):
         # Clear the list of recorded moves
         self.move_states = []
 
-    def finish(self, won):
+    def finish(self, winner):
         """
         This method is called when the game has finished. It gives the player a
         chance to process to the outcome of the game.
 
-        TODO: do we need the final board state? in case the other player won
-        so we can mark it as value = 0.0? or is this done during move()
-        # :param board: final state of the game board
-        :param won: boolean specifying whether the game was won or lost
-        :type won: bool
+        Adjustments to values should occur in this method and nowhere else.
+
+        :param winner: result of the game, rules.NOUGHT, rules.CROSS or None
+        :type winner: int
         """
         # Iterate through the list of moves and assign a value for each one
         # according to the game outcome
@@ -271,12 +280,20 @@ class ReinforcementAgent(Player):
             # Look the state up in the state values dictionary
             value = self.value(move_state)
 
-            # Give the state a default value if not known previously
+            # Give the state a value if not known previously
             if not value:
-                self.set_value(move_state, self.DEFAULT_VALUE)
+                if move_state is self.move_states[-1] and winner:
+                    # Assign maximum value to a winning final state
+                    value = self.MAX_VALUE
+                    self.set_value(self.move_states[-1], value)
+                else:
+                    value = self.DEFAULT_VALUE
+                    self.set_value(move_state, value)
 
-            # TODO: Increase or decrease the state value depending on the game outcome
-            if won:
-                self.set_value(move_state, value + 0.1)
+            # Increase or decrease the state value depending on the game outcome
+            if winner == self.side:
+                self.set_value(move_state, value + 1)
+            elif winner == None:
+                pass  # do not adjust value for a draw
             else:
-                self.set_value(move_state, value - 0.1)
+                self.set_value(move_state, value - 1)

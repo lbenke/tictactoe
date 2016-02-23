@@ -18,6 +18,7 @@ class TicTacToe(object):
 
         # Initialise the board and players
         self.board = np.zeros((n, n))
+        # TODO: maybe just pass in the actual objects and set player.side here?
         self.player1 = player1_class(rules.NOUGHT, self.logger)
         self.player2 = player2_class(rules.CROSS, self.logger)
 
@@ -33,21 +34,21 @@ class TicTacToe(object):
         winner = self.play()
 
         # Notify the players that the game has finished
-        self.player1.finish(winner is self.player1)
-        self.player2.finish(winner is self.player2)
+        self.player1.finish(winner)
+        self.player2.finish(winner)
 
-        return winner.side if winner else rules.EMPTY
+        return winner
 
     def play(self):
         """
         Plays the game, alternative turns between the players.
 
-        :return: the winning player, or False if nobody has won
+        :return: the side of the winning player, or None if there was a draw
         """
         player = self.player1
 
         while True:
-            self.logger.debug(self.board_str())
+            self.logger.debug(rules.board_str(self.board))
 
             # Get the coordinates of the player's move
             move = player.move(self.board)
@@ -63,34 +64,59 @@ class TicTacToe(object):
             # Check for a win or draw
             if rules.winning_move(self.board, move):
                 self.logger.info("Game over: {0} win \n{1}".format(
-                        rules.side_name(player.side), self.board_str()))
+                        rules.side_name(player.side), rules.board_str(
+                        self.board)))
                 # Return winning player
-                return player
+                return player.side
             elif rules.draw(self.board):
-                self.logger.info("Game over: draw \n{0}".format(self.board_str()))
+                self.logger.info("Game over: draw \n{0}".format(
+                    rules.board_str(self.board)))
                 # Return None for draw (no winning player)
                 return None
 
             # Change player
             player = self.player2 if player is self.player1 else self.player1
 
-    def board_str(self):
-        """ Formats the board state as a string replacing cell values with
-        enum names """
-        # Join columns using '|' and rows using line-feeds
-        return str('\n'.join(['|'.join([rules.token(item) for item in row])
-                for row in self.board]))
-
 
 if __name__ == "__main__":
-    ttt = TicTacToe(3, ReinforcementAgent, Agent03, logging.FATAL)
+    player1_class = ReinforcementAgent
+    player2_class = ReinforcementAgent  #Agent03
 
-    n = 1000
-    winner = 0
+    n = 3
 
-    for _ in range(0, n):
-        winner += ttt.run()
-
-    print "Player won {0} out of {1} games.".format(winner, n)
-
+    ttt = TicTacToe(n, player1_class, player2_class, logging.FATAL)
     # mpl_plot.plot_board(ttt.board)
+
+    player1_wins = 0
+    player2_wins = 0
+    draws = 0
+    played = 0
+
+    for _ in range(0, 10000):
+        winner = ttt.run()
+        played += 1
+
+        if not winner:
+            draws += 1
+        elif winner is ttt.player1.side:
+            player1_wins += 1
+        elif winner is ttt.player2.side:
+            player2_wins += 1
+
+    # Print the known states and associated values
+    for k, v in ttt.player1.state_values.items():
+        print "{0}\nValue: {1}\n".format(rules.board_str(k.unwrap()), v)
+
+    # Print results
+    print "Player 1: {0}\nPlayer 2: {1}\nDraw: {2}\nTotal: {3}".format(
+        player1_wins, player2_wins, draws, played)
+    print "Number of states stored: {0}".format(len(ttt.player1.state_values))
+
+    """
+    Upper bound on complexity (number of states) for a 3x3 board is 3^9 = 19,683
+    (three states for each cell and nine cells).
+    Excluding illegal moves (e.g. five noughts and no crosses), the number of
+    possible states is 5478.
+    Most of these are rotations or reflections of other states; excluding these
+    gives 765 unique states.
+    """
