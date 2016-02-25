@@ -92,9 +92,16 @@ if __name__ == "__main__":
     draws = 0
     played = 0
 
-    for _ in range(0, 10000):
+    # Profiling start
+    import cProfile
+    pr = cProfile.Profile()
+    pr.enable()
+
+    for _ in range(0, 1000):
         winner = ttt.run()
         played += 1
+        if played % 100 == 0:
+            print played
 
         if not winner:
             draws += 1
@@ -104,13 +111,17 @@ if __name__ == "__main__":
             player2_wins += 1
 
     # Print the known states and associated values
-    for k, v in ttt.player1.state_values.items():
-        print "{0}\nValue: {1}\n".format(rules.board_str(k.unwrap()), v)
+    # for k, v in ttt.player1.state_values.items():
+    #     print "{0}\nValue: {1}\n".format(rules.board_str(k.unwrap()), v)
 
     # Print results
     print "Player 1: {0}\nPlayer 2: {1}\nDraw: {2}\nTotal: {3}".format(
         player1_wins, player2_wins, draws, played)
     print "Number of states stored: {0}".format(len(ttt.player1.state_values))
+
+    # Profiling end
+    pr.disable()
+    pr.print_stats(sort='cumtime')
 
     """
     Upper bound on complexity (number of states) for a 3x3 board is 3^9 = 19,683

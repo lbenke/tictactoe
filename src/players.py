@@ -2,6 +2,7 @@ import random
 from abc import ABCMeta, abstractmethod
 import rules
 from utils import Hashable
+import utils
 from collections import OrderedDict
 
 
@@ -148,7 +149,7 @@ class ReinforcementAgent(Player):
         :rtype: float
         """
         # Wrap the state so it can be used as a key in the values dictionary
-        hashable = Hashable(state)
+        hashable = hash(str(state.data))  #utils.array_hash(state)  #Hashable(state)
         if hashable in self.state_values:
             return self.state_values[hashable]
         else:
@@ -164,7 +165,7 @@ class ReinforcementAgent(Player):
         :type value: float
         """
         # Wrap the state so it can be used as a key in the values dictionary
-        hashable = Hashable(state)
+        hashable = hash(str(state.data))  #utils.array_hash(state)  #Hashable(state)
         self.state_values[hashable] = value
 
     def move_value(self, cell, board):
@@ -230,7 +231,7 @@ class ReinforcementAgent(Player):
         # between equally-valued cells? See TO DO below
         possible_moves = np.asarray(possible_moves)
         possible_moves = possible_moves[possible_moves[:,1].argsort()]
-        self.logger.debug("Moves:\n{0}".format(possible_moves))
+        # self.logger.debug("Moves:\n{0}".format(possible_moves))
 
         # Choose either highest value (exploit) or random cell (explore)
         if self.state == self.EXPLOITING:
@@ -249,7 +250,7 @@ class ReinforcementAgent(Player):
             raise ValueError("State is unexpected value: {0}".format(
                 self.state))
 
-        # Record move state for later TODO: why aren't we storing hashable here?
+        # Record move state for later
         move_state = board.copy()
         move_state[cell] = self.side
         self.move_states.append(move_state)
@@ -291,9 +292,11 @@ class ReinforcementAgent(Player):
                     self.set_value(move_state, value)
 
             # Increase or decrease the state value depending on the game outcome
+            # TODO: fix value adjustment (nothing should become higher than max)
             if winner == self.side:
-                self.set_value(move_state, value + 1)
+                self.set_value(move_state, value + 4) #+ 1)
             elif winner == None:
-                pass  # do not adjust value for a draw
+                # pass  # do not adjust value for a draw
+                self.set_value(move_state, value + 1) #+ 1)
             else:
                 self.set_value(move_state, value - 1)

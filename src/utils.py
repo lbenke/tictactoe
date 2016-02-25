@@ -1,5 +1,26 @@
 from hashlib import sha1
+
 from numpy import all, array, uint8
+import hashlib
+
+
+def array_hash(array):
+    """ Convert the given array into a hash value """
+    # Time to execute 1000 runs < 11 seconds
+    # b = array.view(uint8)
+    # return hashlib.sha1(b).hexdigest()
+
+    # Time to execute 1000 runs < 11 seconds
+    # return int(sha1(array.view(uint8)).hexdigest(), 16)
+
+    # Time to execute 1000 runs < 5 seconds
+    # array.flags.writeable = False
+    # hash_number = hash(array.data)
+    # array.flags.writeable = True
+    # return hash_number
+
+    # Best time to execute 1000 runs 3.44 seconds
+    return hash(str(array.data))
 
 
 class Hashable(object):
