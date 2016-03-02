@@ -8,6 +8,7 @@ import rules
 EMPTY = 0
 NOUGHT = 1
 CROSS = -1
+sides = [CROSS, NOUGHT]
 __tokens = {EMPTY: " ", NOUGHT: "o", CROSS: "x"}
 __names = {EMPTY: " ", NOUGHT: "Noughts", CROSS: "Crosses"}
 
