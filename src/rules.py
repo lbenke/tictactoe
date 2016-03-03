@@ -14,7 +14,7 @@ __names = {EMPTY: " ", NOUGHT: "Noughts", CROSS: "Crosses"}
 
 
 def token(value):
-    """Returns the game token for a value"""
+    """Returns the game token for a value."""
     try:
         return __tokens[value]
     except KeyError:
@@ -22,7 +22,7 @@ def token(value):
 
 
 def side_name(value):
-    """Returns the side name for a value"""
+    """Returns the side name for a value."""
     try:
         return __names[value]
     except KeyError:
@@ -30,20 +30,22 @@ def side_name(value):
 
 
 def opponent(side):
-    """Returns the side of the opponent"""
+    """Returns the side of the opponent."""
     return -side
 
 
 def empty_cells(board):
     """
-    Returns a list of empty cells remaining on a board.
+    Returns a list of the empty cells remaining on a board.
 
-    :param board: two dimensional array representing the current board
-    :type board: numpy.ndarray
-    :return: array containing the locations of empty cells as x,y pairs
-    :rtype: numpy.ndarray
+    Params:
+        board (numpy.ndarray): two dimensional array representing the game board
+
+    Returns:
+        numpy.ndarray: an array containing the locations of empty cells as
+            x,y pairs
     """
-    # Get list of empty cells and transpose into list of x,y pairs
+    # Get list of empty cells and transpose into a list of x,y pairs
     return np.transpose(np.nonzero(board == rules.EMPTY))
 
 
@@ -53,7 +55,7 @@ def valid_move(board, move):
     one of the empty cells.
 
     Params:
-        board (numpy.ndarray):
+        board (numpy.ndarray): two dimensional array representing the game board
         move ((int, int)): tuple with the coordinates of the new move (x, y)
 
     Returns:
@@ -64,17 +66,18 @@ def valid_move(board, move):
 
 def winning_move(board, move):
     """
-    Checks whether the given move results in a win.
+    Checks whether the given move resulted in a win.
 
     Calculates the sum of the row, column and diagonals of the new move and
     compares against the expected value for a full line.
 
-    :param board: two dimensional array representing the board after the move
-    :type board: numpy.ndarray
-    :param move: tuple with the coordinates of the new move (x, y)
-    :type move: (int, int)
-    :return: True if move results in a win, False otherwise
-    :rtype: bool
+    Params:
+        board (numpy.ndarray): two dimensional array representing the board
+            after the move
+        move ((int, int)): tuple with the coordinates of the new move (x, y)
+
+    Returns:
+        bool: True if the move results in a win, False otherwise
     """
     # A full line sums to n or -n if the sides are 1 and -1
     n = board.shape[0]
@@ -100,10 +103,12 @@ def draw(board):
     """
     Checks whether the given move results in a draw.
 
-    :param board: two dimensional array representing the board after the move
-    :type board: numpy.ndarray
-    :return: True if move results in a draw, False otherwise
-    :rtype: bool
+    Params:
+        board (numpy.ndarray): two dimensional array representing the board
+            after the move
+
+    Returns:
+        bool: True if move results in a draw, False otherwise
     """
     if EMPTY in board:
         return False
@@ -113,8 +118,16 @@ def draw(board):
 
 
 def board_str(board):
-        """ Formats a board state as a string replacing cell values with
-        enum names """
-        # Join columns using '|' and rows using line-feeds
-        return str('\n'.join(['|'.join([rules.token(item) for item in row])
-                for row in board]))
+    """
+    Formats a board as a string replacing cell values with enum names.
+
+    Params:
+        board (numpy.ndarray): two dimensional array representing the board
+            after the move
+
+    Returns:
+        str: the board represented as a string
+    """
+    # Join columns using '|' and rows using line-feeds
+    return str('\n'.join(['|'.join([rules.token(item) for item in row])
+            for row in board]))

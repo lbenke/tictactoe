@@ -34,17 +34,20 @@ class Player(object):
         Returns the coordinates of the move the current player selects given the
         current board state.
 
-        :param board: two dimensional array representing the current board
-        :type board: numpy.ndarray
-        :return: a tuple with the coordinates of the new move (x, y)
-        :rtype: (int, int)
+        Params:
+            board (numpy.ndarray): two dimensional array representing the game board
+
+        Returns:
+            (int, int): tuple with the coordinates of the new move (x, y)
         """
         pass
 
     def start(self):
         """
-        This method is called before the game starts. It gives the player a
-        chance to do any initialisation required before the game.
+        Called before the game starts.
+
+        This method gives the player a chance to do any initialisation required
+        before the game.
         """
         pass
 
@@ -53,14 +56,14 @@ class Player(object):
         This method is called when the game has finished. It gives the player a
         chance to respond to the outcome of the game.
 
-        :param won: boolean specifying whether the game was won or lost
-        :type won: bool
+        Params:
+            won (bool): boolean specifying whether the game was won or lost
         """
         pass
 
 
 class Human(Player):
-    """Player for human input via the command line"""
+    """Player for human input via the command line."""
     def move(self, board):
         print rules.board_str(board)
         while True:
@@ -73,7 +76,7 @@ class Human(Player):
 
 
 class Agent01(Player):
-    """Agent that selects the first empty cell"""
+    """Agent that selects the first empty cell."""
     def move(self, board):
         # Select the first empty cell
         empty_cells = rules.empty_cells(board)
@@ -81,7 +84,7 @@ class Agent01(Player):
 
 
 class Agent02(Player):
-    """Agent that selects an empty cell at random"""
+    """Agent that selects an empty cell at random."""
     def move(self, board):
         # Select an empty cell at random
         empty_cells = rules.empty_cells(board)
@@ -89,7 +92,7 @@ class Agent02(Player):
 
 
 class Agent03(Player):
-    """Agent that checks for a winning move"""
+    """Agent that checks for a winning move."""
     def move(self, board):
         empty_cells = rules.empty_cells(board)
 
@@ -107,7 +110,7 @@ class Agent03(Player):
 
 class Agent04(Player):
     """Agent that checks for a winning move for itself, and blocks winning
-    moves for its opponent"""
+    moves for its opponent."""
     def move(self, board):
         empty_cells = rules.empty_cells(board)
 
@@ -134,7 +137,25 @@ class Agent04(Player):
 
 
 class ReinforcementAgent(Player):
-    """Agent that uses reinforcement learning to determine values for moves"""
+    """
+    Agent that uses reinforcement learning to determine values for moves.
+
+    During game, each move:
+        1. Iterate through possible moves (empty_cells) and look up in states
+        2. States that include a full row are automatically assigned value=1.0
+           States where the opponent wins are assigned value=0.0
+           - This happens before the move is selected
+        3. Choose either highest value (exploit) or random other cell (explore)
+        4. Record move state for later
+
+    After a win:
+        Increase the value of each recorded move/state for that game (we are
+        more likely to win from these states)
+
+    After a loss or draw:
+        Decrease the value of each recorded move/state (we are move likely to
+        lose or draw from these states)
+    """
     DEFAULT_VALUE = 0.0
     MAX_VALUE = 10.0  # TODO: fix value adjustments
     MIN_VALUE = -10.0  # TODO: unused
@@ -163,8 +184,8 @@ class ReinforcementAgent(Player):
         """
         Looks up the given state in the list of known state values.
 
-        :return: value of the state if known, otherwise None
-        :rtype: float
+        Returns:
+            float: value of the state if known, otherwise None
         """
         state_hash = hash(str(state.data))
         if state_hash in self.state_values:
@@ -177,67 +198,59 @@ class ReinforcementAgent(Player):
         """
         Sets the value of the given state in the list of known state values.
 
-        :param state: two dimensional array representing the board state
-        :type state: numpy.ndarray
-        :param value: value of the state
-        :type value: float
+        Params:
+            state (numpy.ndarray): two dimensional array representing the
+                board state
+            value (float): value of the state
         """
-        # Create a hash of the state array to use a the dict key, then store
-        # the value and the actual state array
+        # Create a hash of the state array to use as the dict key, then store
+        # the value and state as a tuple in the dictionary
         state_hash = hash(str(state.data))
         self.state_values[state_hash] = (state, value)
 
     def state_values_list(self):
+        """
+        Returns the current list of recorded states and values.
+
+        Returns:
+            [(numpy.ndarray, float)]: a list of state-value pairs in the form
+                [(state, value)]
+        """
         return self.state_values.values()
 
-    def move_value(self, cell, board):
+    def move_value(self, move, board):
         """
-        Checks whether the specified move represents a win state and returns a
+        Checks whether the specified move would result in a win and returns a
         value accordingly. States that have not been seen before are given a
         default value. Note that no values are stored here.
+        TODO: remove the win check and just get the state, remove this method?
 
-        :param cell: a tuple with the coordinates of the new move (x, y)
-        :type cell: (int, int)
-        :param board: two dimensional array representing the current board
-        :type board: numpy.ndarray
-        :return: the value of state represented by
+        Params:
+            move ((int, int)): tuple with the coordinates of the new move (x, y)
+            board (numpy.ndarray): two dimensional array representing the board
+
+        Returns:
+            float: the value of the state after the move is applied
         """
-        cell = tuple(cell)
+        move = tuple(move)
         board = board.copy()
-        board[cell] = self.side
+        board[move] = self.side
 
         # Check if this is a new state with no recorded value
         if not self.value(board):
             # Check if this is a winning move for the player
-            if rules.winning_move(board, cell):
-                # Return maximum value to the state
-                if self.logger:
-                    self.logger.debug("Winning state, value set to maximum")
-                return self.MAX_VALUE
-            else:
-                return self.DEFAULT_VALUE
+            # if rules.winning_move(board, move):
+            #     # Return maximum value to the state
+            #     if self.logger:
+            #         self.logger.debug("Winning state, value set to maximum")
+            #     return self.MAX_VALUE
+            # else:
+            #     return self.DEFAULT_VALUE
+            return self.DEFAULT_VALUE
 
         return self.value(board)
 
     def move(self, board):
-        """
-        During game, each move:
-        1. Iterate through possible moves (empty_cells) and look up in states
-        2. States that include a full row are automatically assigned value=1.0
-           States where the opponent wins are assigned value=0.0
-           - This happens before the move is selected
-        3. Choose either highest value (exploit) or random other cell (explore)
-            - could use weighted function (bias?) to choose, never choose 0/1
-        4. Record move/state for later
-
-        After win:
-        Increase the value of each recorded move/state for that game (we are
-        more likely to win from these states)
-
-        After lose or draw:
-        Decrease the value of each recorded move/state (we are move likely to
-        lose or draw from these states)
-        """
         # Look up the possible moves in the state values list
         empty_cells = rules.empty_cells(board)
         possible_moves = []  # [[cell, value]]
@@ -280,23 +293,10 @@ class ReinforcementAgent(Player):
         return cell
 
     def start(self):
-        """
-        This method is called before the game starts. It gives the player a
-        chance to do any initialisation required before the game.
-        """
         # Clear the list of recorded moves
         self.move_states = []
 
     def finish(self, winner):
-        """
-        This method is called when the game has finished. It gives the player a
-        chance to process to the outcome of the game.
-
-        Adjustments to values should occur in this method and nowhere else.
-
-        :param winner: result of the game, rules.NOUGHT, rules.CROSS or None
-        :type winner: int
-        """
         # Iterate through the list of moves and assign a value for each one
         # according to the game outcome
         for move_state in self.move_states:
