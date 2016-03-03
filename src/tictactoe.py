@@ -128,14 +128,14 @@ class TicTacToe(object):
             # Check for a win or draw
             if rules.winning_move(self.board, move):
                 if self.logger:
-                    self.logger.info("Game over: {0} win ({1})\n{2}\n".format(
-                            rules.side_name(player.side),
-                        type(player).__name__, rules.board_str(self.board)))
+                    self.logger.info("{2}\nGame over: {0} win ({1})".format(
+                            rules.side_name(player.side), type(player).__name__,
+                            rules.board_str(self.board)))
                 # Return winning player
                 return player.side
             elif rules.draw(self.board):
                 if self.logger:
-                    self.logger.info("Game over: draw \n{0}\n".format(
+                    self.logger.info("{0}\nGame over: Draw".format(
                         rules.board_str(self.board)))
                 # Return None for draw
                 return None
@@ -150,12 +150,12 @@ if __name__ == "__main__":
     # Set up the game
     n = 3
     player_1 = ReinforcementAgent(logger=logger)
-    player_2 = ReinforcementAgent(logger=logger)
+    player_2 = Agent03() #ReinforcementAgent(logger=logger)
     game = TicTacToe(n, [player_1, player_2], shuffle=True, logger=logger)
 
     # Profiling start
-    pr = cProfile.Profile()
-    pr.enable()
+    # pr = cProfile.Profile()
+    # pr.enable()
 
     # Set up the MOEs
     player_1_wins = 0
@@ -164,12 +164,8 @@ if __name__ == "__main__":
     played = 0
 
     # Train agents over a large number of runs
-    for _ in range(0, 10000):
+    for _ in range(0, 1000):
         winner = game.run()
-
-        played += 1
-        if played % 1000 == 0:
-            print played
 
         if not winner:
             draws += 1
@@ -180,27 +176,60 @@ if __name__ == "__main__":
         else:
             raise ValueError("Unexpected winner: {0}".format(winner))
 
+        played += 1
+        if played % 1000 == 0:
+            print "Total games: {0}. Moving average: ({1}% {2}% {3}%)".format(
+                    played, player_1_wins / 10, draws / 10, player_2_wins / 10)
+            draws = 0
+            player_1_wins = 0
+            player_2_wins = 0
+
     # Print the recorded states and associated values
-    print "Player 1 state values:"
-    for array, value in player_1.state_values_list():
-        print "{0}\nValue: {1}\n".format(rules.board_str(array), value)
+    # print "Player 1 state values:"
+    # for array, value in player_1.state_values_list():
+    #     print "{0}\nValue: {1}\n".format(rules.board_str(array), value)
 
     # Print the training results
     print "Player 1: {0}\nPlayer 2: {1}\nDraw: {2}\nTotal: {3}".format(
         player_1_wins, player_2_wins, draws, played)
     print "Number of states stored Player 1: {0}".format(len(
         player_1.state_values))
-    print "Number of states stored Player 2: {0}".format(len(
-        player_2.state_values))
+    # print "Number of states stored Player 2: {0}".format(len(
+    #     player_2.state_values))
 
     # Profiling end
-    pr.disable()
-    pr.print_stats(sort='cumtime')
+    # pr.disable()
+    # pr.print_stats(sort='cumtime')
+
+    # Train over harder agent
+    player_2 = Agent04()
+    game.set_players([player_1, player_2])
+    # Train agents over a large number of runs
+    for _ in range(0, 1000):
+        winner = game.run()
+
+        if not winner:
+            draws += 1
+        elif winner is player_1.side:
+            player_1_wins += 1
+        elif winner is player_2.side:
+            player_2_wins += 1
+        else:
+            raise ValueError("Unexpected winner: {0}".format(winner))
+
+        played += 1
+        if played % 1000 == 0:
+            print "Total games: {0}. Moving average: ({1}% {2}% {3}%)".format(
+                    played, player_1_wins / 10, draws / 10, player_2_wins / 10)
+            draws = 0
+            player_1_wins = 0
+            player_2_wins = 0
+
 
     # Insert a human player
-    player_2.BIAS = 0.0  # turn off exploration once trained
+    player_1.BIAS = 0.0  # turn off exploration once trained
     logger.setLevel(logging.INFO)
-    player_1 = Human(logger=logger)
+    player_2 = Human(logger=logger)
     game.set_players([player_1, player_2])
     while True:
         game.run()

@@ -65,7 +65,7 @@ class Player(object):
 class Human(Player):
     """Player for human input via the command line."""
     def move(self, board):
-        print rules.board_str(board)
+        print "\n{}".format(rules.board_str(board))
         while True:
             try:
                 move = tuple(map(int,raw_input("Cell (row, col): ").split(',')))
@@ -142,11 +142,8 @@ class ReinforcementAgent(Player):
 
     During game, each move:
         1. Iterate through possible moves (empty_cells) and look up in states
-        2. States that include a full row are automatically assigned value=1.0
-           States where the opponent wins are assigned value=0.0
-           - This happens before the move is selected
-        3. Choose either highest value (exploit) or random other cell (explore)
-        4. Record move state for later
+        2. Choose either highest value (exploit) or random other cell (explore)
+        3. Record move state for later
 
     After a win:
         Increase the value of each recorded move/state for that game (we are
@@ -165,7 +162,7 @@ class ReinforcementAgent(Player):
     EXPLORING = 1
 
     # Bias represents the probability that the agent will explore during a move
-    BIAS = 0.1
+    BIAS = 0.2
 
     def __init__(self, side=None, logger=None):
         super(ReinforcementAgent, self).__init__(side, logger)
