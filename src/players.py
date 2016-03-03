@@ -1,3 +1,4 @@
+import numpy as np
 import random
 from abc import ABCMeta, abstractmethod
 import rules
@@ -62,7 +63,14 @@ class Human(Player):
     """Player for human input via the command line"""
     def move(self, board):
         print rules.board_str(board)
-        return tuple(map(int,raw_input("Cell (row, column): ").split(',')))
+        while True:
+            try:
+                move = tuple(map(int,raw_input("Cell (row, col): ").split(',')))
+            except ValueError:
+                continue
+            if rules.valid_move(board, move):
+                return move
+
 
 class Agent01(Player):
     """Agent that selects the first empty cell"""
@@ -129,14 +137,13 @@ class ReinforcementAgent(Player):
     """Agent that uses reinforcement learning to determine values for moves"""
     DEFAULT_VALUE = 0.0
     MAX_VALUE = 10.0  # TODO: fix value adjustments
-    MIN_VALUE = -10.0  # TODO: unusued
+    MIN_VALUE = -10.0  # TODO: unused
 
     # Agent states
     EXPLOITING = 0
     EXPLORING = 1
 
     # Bias represents the probability that the agent will explore during a move
-    # TODO: adjust value over time
     BIAS = 0.1
 
     def __init__(self, side=None, logger=None):
@@ -185,9 +192,9 @@ class ReinforcementAgent(Player):
 
     def move_value(self, cell, board):
         """
-        Checks whether the specified move represents a win state and assigns a
+        Checks whether the specified move represents a win state and returns a
         value accordingly. States that have not been seen before are given a
-        default value.
+        default value. Note that no values are stored here.
 
         :param cell: a tuple with the coordinates of the new move (x, y)
         :type cell: (int, int)
@@ -231,28 +238,25 @@ class ReinforcementAgent(Player):
         Decrease the value of each recorded move/state (we are move likely to
         lose or draw from these states)
         """
-        # Look up possible moves in known state values list
+        # Look up the possible moves in the state values list
         empty_cells = rules.empty_cells(board)
-        import numpy as np
         possible_moves = []  # [[cell, value]]
         for cell in empty_cells:
             possible_moves.append([cell, self.move_value(cell, board)])
 
-        # Sort moves by value so we can choose first when exploiting
-        # Sorted in ascending order so the last element has the highest value
+        # Sort moves by value (last element has highest value)
         possible_moves = np.asarray(possible_moves)
         possible_moves = possible_moves[possible_moves[:,1].argsort()]
-        # if self.logger:
-        #     self.logger.debug("Moves:\n{0}".format(possible_moves))
 
-        # Choose move behaviour
+        # Choose move behaviour based on the bias probability
+        # TODO: adjust bias down over time
         if random.random() < self.BIAS:
             self.state = self.EXPLORING
         else:
             self.state = self.EXPLOITING
 
-        # Choose either highest value (exploit) or random cell (explore)
-        if self.state == self.EXPLOITING or len(possible_moves) < 2:
+        # Choose either highest value (exploit) or a random other cell (explore)
+        if self.state == self.EXPLOITING or len(possible_moves) == 1:
             # Find the highest value and get all free cells with this value,
             # then choose one at random
             best_value = possible_moves[-1][1]
@@ -261,7 +265,7 @@ class ReinforcementAgent(Player):
             cell = tuple(best_cells[i])
         elif self.state == self.EXPLORING:
             # Choose a random cell that does not have the highest value
-            # TODO: weight other moves according to value
+            # TODO: weight other moves according to value?
             i = random.randint(0, len(possible_moves) - 2)
             cell = tuple(possible_moves[i][0])
         else:
@@ -301,20 +305,34 @@ class ReinforcementAgent(Player):
 
             # Give the state a value if not known previously
             if not value:
-                if move_state is self.move_states[-1] and winner:
-                    # Assign maximum value to a winning final state
-                    value = self.MAX_VALUE
-                    self.set_value(self.move_states[-1], value)
-                else:
-                    value = self.DEFAULT_VALUE
-                    self.set_value(move_state, value)
+                # if move_state is self.move_states[-1] and winner:
+                #  0,0   # Assign maximum value to the last move if won
+                #     # TODO: remove this? let it figure this out itself?
+                #     value = self.MAX_VALUE
+                #     self.set_value(self.move_states[-1], value)
+                # else:
+                #     value = self.DEFAULT_VALUE
+                #     self.set_value(move_state, value)
+
+                value = self.DEFAULT_VALUE
+                self.set_value(move_state, value)
 
             # Increase or decrease the state value depending on the game outcome
             # TODO: fix value adjustment (nothing should become higher than max)
             if winner == self.side:
                 self.set_value(move_state, value + 1) #+ 1)
-            elif winner == None:
+            elif winner is None:
                 # pass  # do not adjust value for a draw
                 self.set_value(move_state, value + 0) #+ 1)
             else:
                 self.set_value(move_state, value - 1)
+
+            """
+            TODO:
+            Adjust the states toward the value of the final state? So moves that
+            led to a win move toward 1.0 and vice versa. Not sure for a draw
+            I.e. don't worry about winner here, just calculate 1.0 or 0.0 for
+            last move then adjust accordingly?
+            Otherwise take win = 1.0, loss = 0.0, draw = ? and adjust each move
+            toward them
+            """

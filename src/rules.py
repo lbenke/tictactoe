@@ -47,6 +47,21 @@ def empty_cells(board):
     return np.transpose(np.nonzero(board == rules.EMPTY))
 
 
+def valid_move(board, move):
+    """
+    Returns whether the move is valid for the given board, i.e. whether it is
+    one of the empty cells.
+
+    Params:
+        board (numpy.ndarray):
+        move ((int, int)): tuple with the coordinates of the new move (x, y)
+
+    Returns:
+        bool: True if the move is valid, False otherwise
+    """
+    return list(move) in rules.empty_cells(board).tolist()
+
+
 def winning_move(board, move):
     """
     Checks whether the given move results in a win.

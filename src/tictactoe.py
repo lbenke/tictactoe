@@ -28,12 +28,12 @@ class TicTacToe(object):
         players ([Player]): list of game players
         logger (logging.Logger): logger
     """
-    def __init__(self, n, players, logger=None):
+    def __init__(self, n, players=[], shuffle=False, logger=None):
         # Initialise the board and players
         self.board = np.zeros((n, n))
-        self.__players = None
         self.set_players(players)
         self.logger = logger
+        self.shuffle = shuffle
 
     def set_players(self, players):
         """
@@ -105,6 +105,9 @@ class TicTacToe(object):
         Returns:
             int: the side of the winning player, or None if there was a draw
         """
+        if self.shuffle:
+            random.shuffle(self.players())
+
         player_loop = cycle(self.players())
 
         for player in player_loop:
@@ -115,10 +118,9 @@ class TicTacToe(object):
             move = player.move(self.board)
 
             # Make the move if it is valid
-            if list(move) in rules.empty_cells(self.board).tolist():
+            if rules.valid_move(self.board, move):
                 self.board[move] = player.side
             else:
-                # Not a valid move since it is not in the list of empty cells
                 if self.logger:
                     self.logger.fatal("Invalid move")
                 raise ValueError("Not a valid move: {0}".format(move))
@@ -149,7 +151,7 @@ if __name__ == "__main__":
     n = 3
     player_1 = ReinforcementAgent(logger=logger)
     player_2 = ReinforcementAgent(logger=logger)
-    game = TicTacToe(n, [player_1, player_2], logger)
+    game = TicTacToe(n, [player_1, player_2], shuffle=True, logger=logger)
 
     # Profiling start
     pr = cProfile.Profile()
@@ -162,7 +164,7 @@ if __name__ == "__main__":
     played = 0
 
     # Train agents over a large number of runs
-    for _ in range(0, 40000):
+    for _ in range(0, 10000):
         winner = game.run()
 
         played += 1
@@ -196,8 +198,9 @@ if __name__ == "__main__":
     pr.print_stats(sort='cumtime')
 
     # Insert a human player
+    player_2.BIAS = 0.0  # turn off exploration once trained
     logger.setLevel(logging.INFO)
-    player_2 = Human(logger=logger)
+    player_1 = Human(logger=logger)
     game.set_players([player_1, player_2])
     while True:
         game.run()
