@@ -1,7 +1,7 @@
 This project represents the development of a reinforcement agent to play simple
 m,n,k games such as Tic-Tac-Toe.
 
-The documentation follows the Google Python docstring style for readabilitiy,
+The documentation follows the Google Python docstring style for readability,
 and requires the Sphinx Napoleon extension for conversion to restructured text.
 See:
 https://sphinxcontrib-napoleon.readthedocs.org/en/latest/
