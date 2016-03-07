@@ -351,10 +351,10 @@ class ReinforcementAgent2(Player):
         Move the value of each move toward the value of the following move
     """
     # Reinforcement learning parameters
-    STEP_SIZE = 0.5  # step size parameter influences the rate of learning
+    STEP_SIZE = 0.25  # step size parameter influences the rate of learning
     DEFAULT_VALUE = 0.5  # value given to new states
     MAX_VALUE = 1.0  # states with this value represent a win
-    DRAW_VALUE = 0.75  # draw states move toward this value
+    DRAW_VALUE = 0.51  # draw states move toward this value
     MIN_VALUE = 0.0  # states with this value represent a loss
     BIAS = 0.1  # the probability that the agent will explore during a move
 
@@ -464,33 +464,54 @@ class ReinforcementAgent2(Player):
     def finish(self, winner):
         # Iterate through the list of moves and assign a value for each one
         # according to the game outcome
-        for move_state in self.move_states:
-            # Look the state up in the state values dictionary
-            value = self.value(move_state)
 
-            # Give the state a value if not known previously
-            if not value:
-                if move_state is self.move_states[-1] and winner:
-                    # Assign maximum value to the last move if won
-                    # TODO: remove this? let it figure this out itself?
-                    value = self.MAX_VALUE
-                    self.set_value(self.move_states[-1], value)
-                else:
-                    value = self.DEFAULT_VALUE
-                    self.set_value(move_state, value)
+        # Assign a value to the final state depending on the game outcome
+        if winner == self.side:
+            final_value = self.MAX_VALUE
+        elif winner is None:
+            final_value = self.DRAW_VALUE
+        else:
+            final_value = self.MIN_VALUE
+        self.set_value(self.move_states[-1], final_value)
 
-                # value = self.DEFAULT_VALUE
-                # self.set_value(move_state, value)
-
-            # Set the final value depending on the game outcome
-            if winner == self.side:
-                final_value = self.MAX_VALUE
-            elif winner is None:
-                final_value = self.DRAW_VALUE
-            else:
-                final_value = self.MIN_VALUE
-
-            # Adjust state value toward the final value of the game using
+        # Iterate through the list of moves in reverse, adjusting values toward
+        # the value of the following move
+        for move_state in reversed(self.move_states[:-1]):
+            # Adjust state value toward the following state value using
             # function V(s) = V(s) + a[V(s') - V(s)]
+            value = self.value(move_state)
+            if not value:
+                value = self.DEFAULT_VALUE
             new_value = value + self.STEP_SIZE * (final_value - value)
             self.set_value(move_state, new_value)
+
+        # for move_state in self.move_states:
+        #     # Look the state up in the state values dictionary
+        #     value = self.value(move_state)
+        #
+        #     # Give the state a value if not known previously
+        #     if not value:
+        #         if move_state is self.move_states[-1] and winner:
+        #             # Assign maximum value to the last move if won
+        #             # TODO: remove this? let it figure this out itself?
+        #             value = self.MAX_VALUE
+        #             self.set_value(self.move_states[-1], value)
+        #         else:
+        #             value = self.DEFAULT_VALUE
+        #             self.set_value(move_state, value)
+        #
+        #         # value = self.DEFAULT_VALUE
+        #         # self.set_value(move_state, value)
+        #
+        #     # Set the final value depending on the game outcome
+        #     if winner == self.side:
+        #         final_value = self.MAX_VALUE
+        #     elif winner is None:
+        #         final_value = self.DRAW_VALUE
+        #     else:
+        #         final_value = self.MIN_VALUE
+        #
+        #     # Adjust state value toward the final value of the game using
+        #     # function V(s) = V(s) + a[V(s') - V(s)]
+        #     new_value = value + self.STEP_SIZE * (final_value - value)
+        #     self.set_value(move_state, new_value)

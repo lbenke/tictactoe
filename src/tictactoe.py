@@ -164,7 +164,7 @@ if __name__ == "__main__":
     played = 0
 
     # Train agent over a large number of runs
-    for _ in range(0, 20000):
+    for _ in range(0, 250000):
         winner = game.run()
 
         if not winner:
@@ -185,9 +185,9 @@ if __name__ == "__main__":
             player_2_wins = 0
 
     # Print the recorded states and associated values
-    print "Agent state values:"
-    for array, value in agent.state_values_list():
-        print "{0}\nValue: {1}\n".format(rules.board_str(array), value)
+    # print "Agent state values:"
+    # for array, value in agent.state_values_list():
+    #     print "{0}\nValue: {1}\n".format(rules.board_str(array), value)
 
     # Print the training results
     print "Agent: {0}\nTrainer: {1}\nDraw: {2}\nTotal: {3}".format(
@@ -199,28 +199,28 @@ if __name__ == "__main__":
     # pr.disable()
     # pr.print_stats(sort='cumtime')
 
-    # Train over harder agent
-    trainer = ReinforcementAgent(logger=logger)
-    game.set_players([agent, trainer])
-    for _ in range(0, 20000):
-        winner = game.run()
-
-        if not winner:
-            draws += 1
-        elif winner is agent.side:
-            player_1_wins += 1
-        elif winner is trainer.side:
-            player_2_wins += 1
-        else:
-            raise ValueError("Unexpected winner: {0}".format(winner))
-
-        played += 1
-        if played % 1000 == 0:
-            print "Total games: {0}. Moving average: ({1}% {2}% {3}%)".format(
-                    played, player_1_wins / 10, draws / 10, player_2_wins / 10)
-            draws = 0
-            player_1_wins = 0
-            player_2_wins = 0
+    # # Train over harder agent
+    # trainer = ReinforcementAgent2(logger=logger)
+    # game.set_players([agent, trainer])
+    # for _ in range(0, 20000):
+    #     winner = game.run()
+    #
+    #     if not winner:
+    #         draws += 1
+    #     elif winner is agent.side:
+    #         player_1_wins += 1
+    #     elif winner is trainer.side:
+    #         player_2_wins += 1
+    #     else:
+    #         raise ValueError("Unexpected winner: {0}".format(winner))
+    #
+    #     played += 1
+    #     if played % 1000 == 0:
+    #         print "Total games: {0}. Moving average: ({1}% {2}% {3}%)".format(
+    #                 played, player_1_wins / 10, draws / 10, player_2_wins / 10)
+    #         draws = 0
+    #         player_1_wins = 0
+    #         player_2_wins = 0
 
 
     # Insert a human player
