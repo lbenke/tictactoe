@@ -356,7 +356,10 @@ class ReinforcementAgent2(Player):
     MAX_VALUE = 1.0  # states with this value represent a win
     DRAW_VALUE = 0.51  # draw states move toward this value
     MIN_VALUE = 0.0  # states with this value represent a loss
-    BIAS = 0.1  # the probability that the agent will explore during a move
+
+    # Agent states
+    EXPLOITING = 111
+    EXPLORING = 222
 
     def __init__(self, side=None, logger=None):
         super(ReinforcementAgent2, self).__init__(side, logger)
@@ -367,6 +370,12 @@ class ReinforcementAgent2(Player):
         # List of moves in the current game, used to make value assessments
         # Each move is recorded as a board state
         self.move_states = []
+
+        self.bias = 1.0  # the probability that the agent will explore during a move
+
+        # TODO: used to adjust bias
+        self.__counter = 0
+
 
     def value(self, state):
         """
@@ -442,13 +451,31 @@ class ReinforcementAgent2(Player):
         for cell in empty_cells:
             possible_moves.append([cell, self.move_value(cell, board)])
         possible_moves = np.asarray(possible_moves)
-        values = possible_moves[:,1]
-        cells = possible_moves[:,0]
 
-        # Choose an empty cell using a weighted random function
-        weights = [w * 1.0 / sum(values) for w in values]  # normalise values
-        weighted_choice = choice(cells, p=weights)
-        move = tuple(weighted_choice)
+        # Choose move behaviour based on the bias probability
+        if random.random() < self.bias:
+            self.state = self.EXPLORING
+        else:
+            self.state = self.EXPLOITING
+
+        # Choose a move
+        if self.state == self.EXPLOITING:
+            # Sort the possible moves by value and choose the best one
+            possible_moves = possible_moves[possible_moves[:,1].argsort()]
+            move = possible_moves[-1][0]
+        elif self.state == self.EXPLORING:
+            # Choose a move using a weighted random function
+            values = possible_moves[:,1]
+            cells = possible_moves[:,0]
+            weights = [w * 1.0 / sum(values) for w in values]  # normalise values
+            weighted_choice = choice(cells, p=weights)
+            move = weighted_choice
+        else:
+            raise ValueError("State is unexpected value: {}".format(
+                self.state))
+
+        # Move must be a tuple
+        move = tuple(move)
 
         # Record move state for later
         move_state = board.copy()
@@ -462,10 +489,21 @@ class ReinforcementAgent2(Player):
         self.move_states = []
 
     def finish(self, winner):
+        # TODO: adjust bias down over time or step after training?
+        # how to detect end of training period?
+        # self.__counter += 1
+        # if self.__counter % 1000 == 0:
+        #     if self.bias > 0:
+        #         self.bias -= 0.0125
+        #         # Fix this, it works if you train with bias long enough
+        #         # maybe do explore = non best value?
+        #         # how to adjust down
+
         # Iterate through the list of moves and assign a value for each one
         # according to the game outcome
 
         # Assign a value to the final state depending on the game outcome
+        # TODO: final state on loss isn't guaranteed loss?
         if winner == self.side:
             final_value = self.MAX_VALUE
         elif winner is None:

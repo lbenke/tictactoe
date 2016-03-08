@@ -28,7 +28,7 @@ class TicTacToe(object):
         players ([Player]): list of game players
         logger (logging.Logger): logger
     """
-    def __init__(self, n, players=[], shuffle=False, logger=None):
+    def __init__(self, n, players, shuffle=False, logger=None):
         # Initialise the board and players
         self.board = np.zeros((n, n))
         self.set_players(players)
@@ -141,46 +141,53 @@ class TicTacToe(object):
                 return None
 
 
-if __name__ == "__main__":
-    # Set up the logger
-    logger = logging.getLogger()
-    logging.basicConfig(stream=sys.stdout, level=logging.FATAL,
-            format="\n%(message)s")
+def batch_run(game, runs, save=True):
+    """
+    Executes the game over a number of runs, displays the moving average results
+    and optionally saves the results to a csv file.
 
-    # Set up the game
-    n = 3
-    agent = ReinforcementAgent2(logger=logger)
-    trainer = Agent04(logger=logger)
-    game = TicTacToe(n, [agent, trainer], shuffle=False, logger=logger)
-
-    # Profiling start
-    # pr = cProfile.Profile()
-    # pr.enable()
+    Params:
+        game (TicTacToe): instance of the game to run
+        runs (int): number of times to run the game
+        save (bool): whether to save the results to a csv file, default True
+    """
+    # TODO: remove specific player refs and just store results for all players
+    # in game.players() (Create a results class?)
+    player_1 = game.players()[0]
+    player_2 = game.players()[1]
 
     # Set up the MOEs
     player_1_wins = 0
     player_2_wins = 0
-    draws = 0
-    played = 0
+    total_draws = 0
+    total_played = 0
+    csv = ""
 
     # Train agent over a large number of runs
-    for _ in range(0, 250000):
+    for _ in range(0, runs):
         winner = game.run()
 
         if not winner:
-            draws += 1
-        elif winner is agent.side:
+            total_draws += 1
+        elif winner is player_1.side:
             player_1_wins += 1
-        elif winner is trainer.side:
+        elif winner is player_2.side:
             player_2_wins += 1
         else:
             raise ValueError("Unexpected winner: {0}".format(winner))
 
-        played += 1
-        if played % 1000 == 0:
-            print "Total games: {0}. Moving average: {1}% {2}% {3}%".format(
-                    played, player_1_wins / 10, draws / 10, player_2_wins / 10)
-            draws = 0
+        # Update MOEs
+        total_played += 1
+        if total_played % 1000 == 0:
+            print "Total games: {0}. Moving average: {1}% {2}% {3}%   Bias={4}".format(
+                    total_played, player_1_wins / 10, total_draws / 10, player_2_wins / 10,
+                    player_1.bias)
+
+            if save:
+                csv += "{0}, {1}, {2}, {3}\n".format(
+                        total_played, player_1_wins / 10, total_draws / 10, player_2_wins / 10)
+
+            total_draws = 0
             player_1_wins = 0
             player_2_wins = 0
 
@@ -190,43 +197,52 @@ if __name__ == "__main__":
     #     print "{0}\nValue: {1}\n".format(rules.board_str(array), value)
 
     # Print the training results
-    print "Agent: {0}\nTrainer: {1}\nDraw: {2}\nTotal: {3}".format(
-        player_1_wins, player_2_wins, draws, played)
+    print "Player 1: {0}\nPlayer 2: {1}\nDraw: {2}\nTotal: {3}".format(
+        player_1_wins, player_2_wins, total_draws, total_played)
     print "Number of states stored for Agent: {0}".format(len(
-        agent.state_values))
+        player_1.state_values))
 
-    # Profiling end
-    # pr.disable()
-    # pr.print_stats(sort='cumtime')
+    # Write results to file
+    if save:
+        with open("graph.csv", "w") as text_file:
+            text_file.write(csv)
 
-    # # Train over harder agent
+
+def main():
+    # Set up the logger
+    logger = logging.getLogger()
+    logging.basicConfig(stream=sys.stdout, level=logging.FATAL,
+            format="\n%(message)s")
+
+    # Create the players
+    agent = ReinforcementAgent2(logger=logger)
+    trainer = Agent04(logger=logger)
+    human = Human(logger=logger)
+
+    # Set up the game
+    n = 3
+    player_1 = agent
+    player_2 = trainer
+    game = TicTacToe(n, [player_1, player_2], shuffle=False, logger=logger)
+
+    batch_run(game, 20000)
+
+    # Train over harder agent
+    # Once the probabilities have converged stop exploring
+    # TODO: add states back in a reduce exploration over time
+    agent.bias = 0
     # trainer = ReinforcementAgent2(logger=logger)
     # game.set_players([agent, trainer])
-    # for _ in range(0, 20000):
-    #     winner = game.run()
-    #
-    #     if not winner:
-    #         draws += 1
-    #     elif winner is agent.side:
-    #         player_1_wins += 1
-    #     elif winner is trainer.side:
-    #         player_2_wins += 1
-    #     else:
-    #         raise ValueError("Unexpected winner: {0}".format(winner))
-    #
-    #     played += 1
-    #     if played % 1000 == 0:
-    #         print "Total games: {0}. Moving average: ({1}% {2}% {3}%)".format(
-    #                 played, player_1_wins / 10, draws / 10, player_2_wins / 10)
-    #         draws = 0
-    #         player_1_wins = 0
-    #         player_2_wins = 0
-
+    batch_run(game, 50000)
 
     # Insert a human player
     agent.BIAS = 0.0  # turn off exploration once trained
     logger.setLevel(logging.INFO)
-    human = Human(logger=logger)
-    game.set_players([agent, human])
+    player_2 = human
+    game.set_players([player_1, player_2])
     while True:
         game.run()
+
+
+if __name__ == "__main__":
+    main()
