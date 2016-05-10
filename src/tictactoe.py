@@ -43,7 +43,7 @@ class TicTacToe(object):
         player is assigned a side from the list specified in the rules module.
         The number of players must match the number of sides.
 
-        Params:
+        Args:
             players ([Player]): the list of players
 
         Raises:
@@ -146,7 +146,7 @@ def batch_run(game, runs, save=True):
     Executes the game over a number of runs, displays the moving average results
     and optionally saves the results to a csv file.
 
-    Params:
+    Args:
         game (TicTacToe): instance of the game to run
         runs (int): number of times to run the game
         save (bool): whether to save the results to a csv file, default True
@@ -178,14 +178,14 @@ def batch_run(game, runs, save=True):
 
         # Update MOEs
         total_played += 1
-        if total_played % 1000 == 0:
-            print "Total games: {0}. Moving average: {1}% {2}% {3}%   Bias={4}".format(
-                    total_played, player_1_wins / 10, total_draws / 10, player_2_wins / 10,
-                    player_1.bias)
+        if total_played % 100 == 0:
+            print "Total games: {}  Moving average: {}% {}% {}%  Bias={}  States={}".format(
+                    total_played, player_1_wins / 1, total_draws / 1, player_2_wins / 1,
+                    player_1.bias, len(player_1.state_values))
 
             if save:
                 csv += "{0}, {1}, {2}, {3}\n".format(
-                        total_played, player_1_wins / 10, total_draws / 10, player_2_wins / 10)
+                        total_played, player_1_wins / 1, total_draws / 1, player_2_wins / 1)
 
             total_draws = 0
             player_1_wins = 0
@@ -193,7 +193,7 @@ def batch_run(game, runs, save=True):
 
     # Print the recorded states and associated values
     # print "Agent state values:"
-    # for array, value in agent.state_values_list():
+    # for array, value in player_1.state_values_list():
     #     print "{0}\nValue: {1}\n".format(rules.board_str(array), value)
 
     # Print the training results
@@ -221,25 +221,22 @@ def main():
 
     # Set up the game
     n = 3
-    player_1 = agent
-    player_2 = trainer
-    game = TicTacToe(n, [player_1, player_2], shuffle=False, logger=logger)
+    game = TicTacToe(n, [agent, trainer], shuffle=False, logger=logger)
 
-    batch_run(game, 20000)
+    # Train the agent against another agent
+    batch_run(game, 1000)
 
     # Train over harder agent
     # Once the probabilities have converged stop exploring
-    # TODO: add states back in a reduce exploration over time
     agent.bias = 0
     # trainer = ReinforcementAgent2(logger=logger)
     # game.set_players([agent, trainer])
-    batch_run(game, 50000)
+    batch_run(game, 5000)
 
     # Insert a human player
-    agent.BIAS = 0.0  # turn off exploration once trained
     logger.setLevel(logging.INFO)
     player_2 = human
-    game.set_players([player_1, player_2])
+    game.set_players([agent, human])
     while True:
         game.run()
 

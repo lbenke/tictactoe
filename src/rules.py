@@ -38,7 +38,7 @@ def empty_cells(board):
     """
     Returns a list of the empty cells remaining on a board.
 
-    Params:
+    Args:
         board (numpy.ndarray): two dimensional array representing the game board
 
     Returns:
@@ -54,7 +54,7 @@ def valid_move(board, move):
     Returns whether the move is valid for the given board, i.e. whether it is
     one of the empty cells.
 
-    Params:
+    Args:
         board (numpy.ndarray): two dimensional array representing the game board
         move ((int, int)): tuple with the coordinates of the new move (x, y)
 
@@ -71,7 +71,7 @@ def winning_move(board, move):
     Calculates the sum of the row, column and diagonals of the new move and
     compares against the expected value for a full line.
 
-    Params:
+    Args:
         board (numpy.ndarray): two dimensional array representing the board
             after the move
         move ((int, int)): tuple with the coordinates of the new move (x, y)
@@ -103,7 +103,7 @@ def draw(board):
     """
     Checks whether the given move results in a draw.
 
-    Params:
+    Args:
         board (numpy.ndarray): two dimensional array representing the board
             after the move
 
@@ -121,7 +121,7 @@ def board_str(board):
     """
     Formats a board as a string replacing cell values with enum names.
 
-    Params:
+    Args:
         board (numpy.ndarray): two dimensional array representing the board
             after the move
 

@@ -23,7 +23,7 @@ class Player(object):
         """
         Constructor for the class.
 
-        Params:
+        Args:
             side (int): the player side, defined in the game rules
         """
         self.side = side
@@ -35,7 +35,7 @@ class Player(object):
         Returns the coordinates of the move the current player selects given the
         current board state.
 
-        Params:
+        Args:
             board (numpy.ndarray): two dimensional array representing the game board
 
         Returns:
@@ -57,7 +57,7 @@ class Player(object):
         This method is called when the game has finished. It gives the player a
         chance to respond to the outcome of the game.
 
-        Params:
+        Args:
             won (bool): boolean specifying whether the game was won or lost
         """
         pass
@@ -204,7 +204,7 @@ class ReinforcementAgent(Player):
         """
         Sets the value of the given state in the list of known state values.
 
-        Params:
+        Args:
             state (numpy.ndarray): two dimensional array representing the
                 board state
             value (float): value of the state
@@ -231,7 +231,7 @@ class ReinforcementAgent(Player):
         default value. Note that no values are stored here.
         TODO: remove the win check and just get the state, remove this method?
 
-        Params:
+        Args:
             move ((int, int)): tuple with the coordinates of the new move (x, y)
             board (numpy.ndarray): two dimensional array representing the board
 
@@ -395,7 +395,7 @@ class ReinforcementAgent2(Player):
         """
         Sets the value of the given state in the list of known state values.
 
-        Params:
+        Args:
             state (numpy.ndarray): two dimensional array representing the
                 board state
             value (float): value of the state
@@ -422,7 +422,7 @@ class ReinforcementAgent2(Player):
         default value. Note that no values are stored here.
         TODO: remove the win check and just get the state, remove this method?
 
-        Params:
+        Args:
             move ((int, int)): tuple with the coordinates of the new move (x, y)
             board (numpy.ndarray): two dimensional array representing the board
 
@@ -491,6 +491,11 @@ class ReinforcementAgent2(Player):
     def finish(self, winner):
         # TODO: adjust bias down over time or step after training?
         # how to detect end of training period?
+        # Maybe play x rounds (e.g. 100) in training mode, then y rounds in
+        # bias=0 mode to test effectiveness and reduce bias based on the
+        # rate of success
+        # So need an updating measure of success, could just alternative mode
+        # each game?
         # self.__counter += 1
         # if self.__counter % 1000 == 0:
         #     if self.bias > 0:
@@ -503,13 +508,15 @@ class ReinforcementAgent2(Player):
         # according to the game outcome
 
         # Assign a value to the final state depending on the game outcome
-        # TODO: final state on loss isn't guaranteed loss?
         if winner == self.side:
             final_value = self.MAX_VALUE
         elif winner is None:
             final_value = self.DRAW_VALUE
         else:
             final_value = self.MIN_VALUE
+        # TODO: final state on loss/draw isn't guaranteed since other player
+        # could have made a different move
+        # Is this why this agent can't play second well?
         self.set_value(self.move_states[-1], final_value)
 
         # Iterate through the list of moves in reverse, adjusting values toward
