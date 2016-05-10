@@ -439,13 +439,29 @@ class ReinforcementAgent2(Player):
 
         return self.value(board)
 
-    def move(self, board):
-        # Look up the possible moves in the state values list as [[cell, value]]
+    def move_values(self, board):
+        """
+        Returns a list of the values of each of the moves possible for the given
+        board.
+
+        Args:
+            board (numpy.ndarray): two dimensional array representing the board
+
+        Returns:
+            [[cell, value]]: a list of cell-value pairs
+        """
+        # Look up the possible moves in the state values list as
         empty_cells = rules.empty_cells(board)
-        possible_moves = []
+
+        values = []
+
         for cell in empty_cells:
-            possible_moves.append([cell, self.move_value(cell, board)])
-        possible_moves = np.asarray(possible_moves)
+            values.append([cell, self.move_value(cell, board)])
+
+        return np.asarray(values)
+
+    def move(self, board):
+        move_values = self.move_values(board)
 
         # Choose move behaviour based on the bias probability
         if random.random() < self.bias:
@@ -456,12 +472,12 @@ class ReinforcementAgent2(Player):
         # Choose a move
         if self.state == self.EXPLOITING:
             # Sort the possible moves by value and choose the best one
-            possible_moves = possible_moves[possible_moves[:,1].argsort()]
+            possible_moves = move_values[move_values[:,1].argsort()]
             move = possible_moves[-1][0]
         elif self.state == self.EXPLORING:
             # Choose a move using a weighted random function
-            values = possible_moves[:,1]
-            cells = possible_moves[:,0]
+            values = move_values[:,1]
+            cells = move_values[:,0]
             weights = [w * 1.0 / sum(values) for w in values]  # normalise values
             weighted_choice = choice(cells, p=weights)
             move = weighted_choice
