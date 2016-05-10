@@ -5,7 +5,7 @@ import rules
 import numpy as np
 import logging
 import sys
-
+from datetime import datetime
 
 class TicTacToe(object):
     """
@@ -232,9 +232,8 @@ def main():
     results += batch_run(game, 5000)
 
     # Write results to file
-    # TODO: combine results into a single csv
-    # move this out?
-    with open("graph.csv", "w") as text_file:
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    with open("Results_{}.csv".format(timestamp), "w") as text_file:
         text_file.write(results)
 
     # Insert a human player

@@ -440,9 +440,9 @@ class ReinforcementAgent2(Player):
         return self.value(board)
 
     def move(self, board):
-        # Look up the possible moves in the state values list
+        # Look up the possible moves in the state values list as [[cell, value]]
         empty_cells = rules.empty_cells(board)
-        possible_moves = []  # [[cell, value]]
+        possible_moves = []
         for cell in empty_cells:
             possible_moves.append([cell, self.move_value(cell, board)])
         possible_moves = np.asarray(possible_moves)
