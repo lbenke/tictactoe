@@ -141,7 +141,7 @@ class TicTacToe(object):
                 return None
 
 
-def batch_run(game, runs, save=True):
+def batch_run(game, runs):
     """
     Executes the game over a number of runs, displays the moving average results
     and optionally saves the results to a csv file.
@@ -149,7 +149,8 @@ def batch_run(game, runs, save=True):
     Args:
         game (TicTacToe): instance of the game to run
         runs (int): number of times to run the game
-        save (bool): whether to save the results to a csv file, default True
+    Returns:
+        string: csv of the results
     """
     # TODO: remove specific player refs and just store results for all players
     # in game.players() (Create a results class?)
@@ -161,7 +162,7 @@ def batch_run(game, runs, save=True):
     player_2_wins = 0
     total_draws = 0
     total_played = 0
-    csv = ""
+    results = ""
 
     # Train agent over a large number of runs
     for _ in range(0, runs):
@@ -183,9 +184,8 @@ def batch_run(game, runs, save=True):
                     total_played, player_1_wins / 1, total_draws / 1, player_2_wins / 1,
                     player_1.bias, len(player_1.state_values))
 
-            if save:
-                csv += "{0}, {1}, {2}, {3}\n".format(
-                        total_played, player_1_wins / 1, total_draws / 1, player_2_wins / 1)
+            results += "{0}, {1}, {2}, {3}\n".format(total_played,
+                player_1_wins / 1, total_draws / 1, player_2_wins / 1)
 
             total_draws = 0
             player_1_wins = 0
@@ -202,10 +202,7 @@ def batch_run(game, runs, save=True):
     print "Number of states stored for Agent: {0}".format(len(
         player_1.state_values))
 
-    # Write results to file
-    if save:
-        with open("graph.csv", "w") as text_file:
-            text_file.write(csv)
+    return results
 
 
 def main():
@@ -222,16 +219,23 @@ def main():
     # Set up the game
     n = 3
     game = TicTacToe(n, [agent, trainer], shuffle=False, logger=logger)
+    results = ""
 
     # Train the agent against another agent
-    batch_run(game, 1000)
+    results += batch_run(game, 1000)
 
     # Train over harder agent
     # Once the probabilities have converged stop exploring
     agent.bias = 0
     # trainer = ReinforcementAgent2(logger=logger)
     # game.set_players([agent, trainer])
-    batch_run(game, 5000)
+    results += batch_run(game, 5000)
+
+    # Write results to file
+    # TODO: combine results into a single csv
+    # move this out?
+    with open("graph.csv", "w") as text_file:
+        text_file.write(results)
 
     # Insert a human player
     logger.setLevel(logging.INFO)

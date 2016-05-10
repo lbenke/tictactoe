@@ -417,17 +417,17 @@ class ReinforcementAgent2(Player):
 
     def move_value(self, move, board):
         """
-        Checks whether the specified move would result in a win and returns a
-        value accordingly. States that have not been seen before are given a
-        default value. Note that no values are stored here.
-        TODO: remove the win check and just get the state, remove this method?
+        Returns the value of the proposed move.
+        States that have not been seen before are given a default value. Note
+        that no values are stored here.
 
         Args:
             move ((int, int)): tuple with the coordinates of the new move (x, y)
             board (numpy.ndarray): two dimensional array representing the board
+                    before the move has taken place
 
         Returns:
-            float: the value of the state after the move is applied
+            float: the value of the state represented by the proposed move
         """
         move = tuple(move)
         board = board.copy()
@@ -435,12 +435,7 @@ class ReinforcementAgent2(Player):
 
         # Check if this is a new state with no recorded value
         if not self.value(board):
-            # Check if this is a winning move for the player
-            if rules.winning_move(board, move):
-                # Return maximum value to the state
-                return self.MAX_VALUE
-            else:
-                return self.DEFAULT_VALUE
+            return self.DEFAULT_VALUE
 
         return self.value(board)
 
@@ -491,7 +486,7 @@ class ReinforcementAgent2(Player):
     def finish(self, winner):
         # TODO: adjust bias down over time or step after training?
         # how to detect end of training period?
-        # Maybe play x rounds (e.g. 100) in training mode, then y rounds in
+        # Maybe play x rounds (e.g. 30) in training mode, then y rounds in
         # bias=0 mode to test effectiveness and reduce bias based on the
         # rate of success
         # So need an updating measure of success, could just alternative mode
