@@ -184,7 +184,7 @@ def batch_run(game, runs):
                     total_played, player_1_wins / 1, total_draws / 1, player_2_wins / 1,
                     player_1.bias, len(player_1.state_values))
 
-            results += "{0}, {1}, {2}, {3}\n".format(total_played,
+            results += "{}, {}, {}, {}\n".format(total_played,
                 player_1_wins / 1, total_draws / 1, player_2_wins / 1)
 
             total_draws = 0
@@ -219,7 +219,7 @@ def main():
     # Set up the game
     n = 3
     game = TicTacToe(n, [agent, trainer], shuffle=False, logger=logger)
-    results = ""
+    results = "Runs, Player 1, Draw, Player 2\n"
 
     # Train the agent against another agent
     results += batch_run(game, 1000)

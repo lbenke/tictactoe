@@ -441,8 +441,8 @@ class ReinforcementAgent2(Player):
 
     def move_values(self, board):
         """
-        Returns a list of the values of each of the moves possible for the given
-        board.
+        Returns a list of the possible moves for the given board with the value
+        of each move.
 
         Args:
             board (numpy.ndarray): two dimensional array representing the board
@@ -450,14 +450,9 @@ class ReinforcementAgent2(Player):
         Returns:
             [[cell, value]]: a list of cell-value pairs
         """
-        # Look up the possible moves in the state values list as
-        empty_cells = rules.empty_cells(board)
-
         values = []
-
-        for cell in empty_cells:
+        for cell in rules.empty_cells(board):
             values.append([cell, self.move_value(cell, board)])
-
         return np.asarray(values)
 
     def move(self, board):
