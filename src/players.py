@@ -371,6 +371,7 @@ class ReinforcementAgent2(Player):
         # Each move is recorded as a board state
         self.move_states = []
 
+        self.state = self.EXPLORING
         self.bias = 1.0  # the probability that the agent will explore during a move
 
         # TODO: used to adjust bias
@@ -465,6 +466,8 @@ class ReinforcementAgent2(Player):
             self.state = self.EXPLOITING
 
         # Choose a move
+        # TODO: change to training, exploiting modes
+        # see note in finish method
         if self.state == self.EXPLOITING:
             # Sort the possible moves by value and choose the best one
             possible_moves = move_values[move_values[:,1].argsort()]
@@ -494,22 +497,7 @@ class ReinforcementAgent2(Player):
         # Clear the list of recorded moves
         self.move_states = []
 
-    def finish(self, winner):
-        # TODO: adjust bias down over time or step after training?
-        # how to detect end of training period?
-        # Maybe play x rounds (e.g. 30) in training mode, then y rounds in
-        # bias=0 mode to test effectiveness and reduce bias based on the
-        # rate of success
-        # So need an updating measure of success, could just alternative mode
-        # each game?
-        # self.__counter += 1
-        # if self.__counter % 1000 == 0:
-        #     if self.bias > 0:
-        #         self.bias -= 0.0125
-        #         # Fix this, it works if you train with bias long enough
-        #         # maybe do explore = non best value?
-        #         # how to adjust down
-
+    def adjust_values(self, winner):
         # Iterate through the list of moves and assign a value for each one
         # according to the game outcome
 
@@ -523,6 +511,7 @@ class ReinforcementAgent2(Player):
         # TODO: final state on loss/draw isn't guaranteed since other player
         # could have made a different move
         # Is this why this agent can't play second well?
+        # maybe move value halfway to loss
         self.set_value(self.move_states[-1], final_value)
 
         # Iterate through the list of moves in reverse, adjusting values toward
@@ -536,33 +525,18 @@ class ReinforcementAgent2(Player):
             new_value = value + self.STEP_SIZE * (final_value - value)
             self.set_value(move_state, new_value)
 
-        # for move_state in self.move_states:
-        #     # Look the state up in the state values dictionary
-        #     value = self.value(move_state)
-        #
-        #     # Give the state a value if not known previously
-        #     if not value:
-        #         if move_state is self.move_states[-1] and winner:
-        #             # Assign maximum value to the last move if won
-        #             # TODO: remove this? let it figure this out itself?
-        #             value = self.MAX_VALUE
-        #             self.set_value(self.move_states[-1], value)
-        #         else:
-        #             value = self.DEFAULT_VALUE
-        #             self.set_value(move_state, value)
-        #
-        #         # value = self.DEFAULT_VALUE
-        #         # self.set_value(move_state, value)
-        #
-        #     # Set the final value depending on the game outcome
-        #     if winner == self.side:
-        #         final_value = self.MAX_VALUE
-        #     elif winner is None:
-        #         final_value = self.DRAW_VALUE
-        #     else:
-        #         final_value = self.MIN_VALUE
-        #
-        #     # Adjust state value toward the final value of the game using
-        #     # function V(s) = V(s) + a[V(s') - V(s)]
-        #     new_value = value + self.STEP_SIZE * (final_value - value)
-        #     self.set_value(move_state, new_value)
+    def new_finish(self, winner):
+        # Update performance metric, e.g. average wins
+        # How do we rank draws?
+        # from collections import deque
+        # self.results_buffer.append(result)
+        # mean = sum(self.results_buffer) / len(self.results_buffer)  # len fixed as parameter
+
+        # Set game play strategy based on current performance
+        # self.state = self.EXPLORING if mean < self.WIN_RATIO else self.EXPLOITING # name??
+
+        # Update state values based on game result
+        self.adjust_values(winner)
+
+    def finish(self, winner):
+        self.adjust_values(winner)
