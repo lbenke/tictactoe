@@ -5,11 +5,13 @@ import rules
 import numpy as np
 import logging
 import sys
+import os
 from datetime import datetime
+
 
 class TicTacToe(object):
     """
-    This class simulates Tic-Tac-Toe (Noughts and Crosses) of size n.
+    This class simulates Tic-Tac-Toe (Noughts and Crosses) of size n x n.
 
     It provides the simulation engine to model the flow of a single game,
     requesting moves from each player in turn and storing the state of the game
@@ -221,19 +223,21 @@ def main():
     game = TicTacToe(n, [agent, trainer], shuffle=False, logger=logger)
     results = "Runs, Player 1, Draw, Player 2\n"
 
-    # Train the agent against another agent
+    # Train the agent against the simple agent
     results += batch_run(game, 1000)
 
     # Train over harder agent
     # Once the probabilities have converged stop exploring
     agent.bias = 0
-    # trainer = ReinforcementAgent2(logger=logger)
-    # game.set_players([agent, trainer])
+    trainer = ReinforcementAgent2(logger=logger)
+    game.set_players([agent, trainer])
     results += batch_run(game, 5000)
 
     # Write results to file
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    with open("Results_{}.csv".format(timestamp), "w") as text_file:
+    if not os.path.exists("results"):
+        os.makedirs("results")
+    with open("results\Results_{}.csv".format(timestamp), "w") as text_file:
         text_file.write(results)
 
     # Insert a human player
