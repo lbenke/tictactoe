@@ -12,8 +12,9 @@ of the game board.
 Game rules are defined in the `rules` module and may be modified to model 
 different game types.
 
-Simple agents (including an interactive human player) are provided in the 
-`Players` module. More complex agents are located in the `agents` subpackage.
+A number of game players, including simple agents and an interactive player, are
+provided in the `Players` module. More complex agents are located in the 
+`agents` subpackage.
 
  The game may be run interactively as follows:
 
