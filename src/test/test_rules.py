@@ -1,3 +1,7 @@
+"""
+This module contains tests for the game rules defined in the `rules` module.
+"""
+
 from unittest import TestCase
 import rules
 import numpy as np

@@ -1,3 +1,8 @@
+"""
+This module contains agents that use reinforcement learning to guide move 
+selection.
+"""
+
 import rules
 from players import Player
 from numpy.random import choice

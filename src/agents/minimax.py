@@ -1,3 +1,7 @@
+"""
+This module contains agents that use minimax to select optimal moves.
+"""
+
 import rules
 from players import Player
 
@@ -6,8 +10,8 @@ class MiniMaxAgent(Player):
     """
     Agent that applies minimax to choose the next move.
 
-    This agent will always choose the optimal move, but is relatively slow as it 
-    uses exhaustive search of the move tree.
+    This agent will always choose the optimal move, but is comparatively slow to
+    execute as it uses exhaustive search of the move tree.
     """
 
     def move(self, board):
