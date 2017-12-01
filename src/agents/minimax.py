@@ -15,11 +15,11 @@ class MiniMaxAgent(Player):
     """
 
     def move(self, board):
-        return self.calc_move(board, self.side)[1]
+        return self.minimax(board, self.side)[1]
 
-    def calc_move(self, board, player):
+    def minimax(self, board, player):
         """
-        Recursive method that returns the ideal next move and its value.
+        Recursive method that returns the optimal next move and its value.
 
         Args:
             state (numpy.ndarray): two dimensional array representing the
@@ -49,20 +49,27 @@ class MiniMaxAgent(Player):
             # Board is full so return draw
             return 0, None
 
+        # Test child moves recursively and add results to the list
         results_list = []
         for cell in empty_cells:
-            # Test child moves recursively and add the results to the list
+            # Make the move
             cell = tuple(cell)
             board[cell] = player
-            retval, move = self.calc_move(board, -player)
+
+            # Get the value of this child move and add it to the results
+            retval, move = self.minimax(board, -player)
             results_list.append(retval)
+
+            # Reverse the move
             board[cell] = rules.EMPTY
 
         if player is self.side:
-            # Return the best move for the player
-            maxele = max(results_list)
-            return maxele, tuple(empty_cells[results_list.index(maxele)])
+            # Return best move for player from list of child moves
+            max_element = max(results_list)
+            move = tuple(empty_cells[results_list.index(max_element)])
+            return max_element, move
         else:
-            # Return the worst move for the opponent
-            minele = min(results_list)
-            return minele, tuple(empty_cells[results_list.index(minele)])
+            # Return worst move for opponent from list of child moves
+            min_element = min(results_list)
+            move = tuple(empty_cells[results_list.index(min_element)])
+            return min_element, move

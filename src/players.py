@@ -68,16 +68,24 @@ class Player(object):
 
 
 class Human(Player):
-    """Player for human input via the command line."""
+    """
+    Player for human input via the command line.
+        
+    Moves are specified using numpad 1-9 (1 is the bottom left cell and 9 is the
+    top right).
+    """
     def move(self, board):
         print "\n{}".format(rules.board_str(board))
         while True:
             try:
-                move = tuple(map(int,raw_input("Cell (row, col): ").split(',')))
+                num = int(raw_input("Cell (1-9): "))
+                if num not in range(1, 10):
+                    continue
+                cell = (int((9 - num) / 3), (num - 1) % 3)
             except ValueError:
                 continue
-            if rules.valid_move(board, move):
-                return move
+            if rules.valid_move(board, cell):
+                return cell
 
 
 class FirstEmptyCellAgent(Player):
