@@ -64,36 +64,38 @@ def valid_move(board, move):
     return list(move) in rules.empty_cells(board).tolist()
 
 
-def winning_move(board, move):
+def winning_move(board):
     """
-    Checks whether the given move resulted in a win.
+    Checks whether the given state represents a win for either player.
 
-    Calculates the sum of the row, column and diagonals of the new move and
-    compares against the expected value for a full line. A full line sums to n 
-    or -n if the sides are 1 and -1
+    Calculates the absolute sum for each row, column and diagonal and compares 
+    against the expected value for a full line (n if the sides are 1 and -1).
 
     Args:
         board (numpy.ndarray): two dimensional array representing the board
             after the move
-        move ((int, int)): tuple with the coordinates of the new move (x, y)
 
     Returns:
-        bool: True if the move resulted in a win, False otherwise
+        bool: True if the board represents a win, False otherwise
     """
     n = board.shape[0]
-    x, y = move
 
-    # Row
-    if abs(board[x].sum()) == n:
-        return True
-    # Column
-    elif abs(board[:,y].sum()) == n:
-        return True
+    # Rows
+    for x in range(0, n):
+        if abs(board[x].sum()) == n:
+            return True
+
+    # Columns
+    for y in range(0, n):
+        if abs(board[:,y].sum()) == n:
+            return True
+
     # Diagonal
-    elif x == y and abs(board.diagonal().sum()) == n:
+    if abs(board.diagonal().sum()) == n:
         return True
+
     # Anti-diagonal
-    elif x == (n - 1) - y and abs(np.fliplr(board).diagonal().sum()) == n:
+    if abs(np.fliplr(board).diagonal().sum()) == n:
         return True
     else:
         return False

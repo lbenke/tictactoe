@@ -123,7 +123,7 @@ class TicTacToe(object):
                 raise ValueError("Not a valid move: {0}".format(move))
 
             # Check for a win or draw
-            if rules.winning_move(self.board, move):
+            if rules.winning_move(self.board):
                 if self.logger:
                     self.logger.info("{2}\nGame over: {0} win ({1})".format(
                             rules.side_name(player.side), type(player).__name__,

@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot
 import rules
 
+
 def plot_board(board):
     n = board.shape[0]
 

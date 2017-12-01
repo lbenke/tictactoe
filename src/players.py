@@ -106,7 +106,7 @@ class WinRandomCellAgent(Player):
             cell = tuple(cell)
             new_board = board.copy()
             new_board[cell] = self.side
-            if rules.winning_move(new_board, cell):
+            if rules.winning_move(new_board):
                 return cell
         else:
             # Otherwise pick a random cell
@@ -124,7 +124,7 @@ class WinBlockRandomCellAgent(Player):
             cell = tuple(cell)
             new_board = board.copy()
             new_board[cell] = self.side
-            if rules.winning_move(new_board, cell):
+            if rules.winning_move(new_board):
                 return cell
 
         # Check if any of the empty cells represents a winning move for the
@@ -133,7 +133,7 @@ class WinBlockRandomCellAgent(Player):
             cell = tuple(cell)
             new_board = board.copy()
             new_board[cell] = -self.side
-            if rules.winning_move(new_board, cell):
+            if rules.winning_move(new_board):
                 if self.logger:
                     self.logger.debug("Blocked {0}".format(cell))
                 return cell
@@ -144,6 +144,10 @@ class WinBlockRandomCellAgent(Player):
 
 
 class OptimalRulesAgent(Player):
-    """Agent that makes the optimal move using a set of predefined rules. This 
-    agent blocks forks (including double forks) and should always win or draw."""
-    pass
+    """
+    Agent that makes the optimal move using a set of predefined rules. This 
+    agent blocks forks (including double forks) and should always win or draw.
+    """
+    def move(self, board):
+        raise NotImplementedError()
+        return None;

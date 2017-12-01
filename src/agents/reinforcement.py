@@ -114,7 +114,7 @@ class ReinforcementAgent1(Player):
         # Check if this is a new state with no recorded value
         if not self.value(board):
             # Check if this is a winning move for the player
-            if rules.winning_move(board, move):
+            if rules.winning_move(board):
                 # Return maximum value to the state
                 return self.MAX_VALUE
             else:
