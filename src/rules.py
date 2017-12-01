@@ -69,7 +69,8 @@ def winning_move(board, move):
     Checks whether the given move resulted in a win.
 
     Calculates the sum of the row, column and diagonals of the new move and
-    compares against the expected value for a full line.
+    compares against the expected value for a full line. A full line sums to n 
+    or -n if the sides are 1 and -1
 
     Args:
         board (numpy.ndarray): two dimensional array representing the board
@@ -77,9 +78,8 @@ def winning_move(board, move):
         move ((int, int)): tuple with the coordinates of the new move (x, y)
 
     Returns:
-        bool: True if the move results in a win, False otherwise
+        bool: True if the move resulted in a win, False otherwise
     """
-    # A full line sums to n or -n if the sides are 1 and -1
     n = board.shape[0]
     x, y = move
 
@@ -99,22 +99,18 @@ def winning_move(board, move):
         return False
 
 
-def draw(board):
+def board_full(board):
     """
-    Checks whether the given move results in a draw.
+    Checks whether a given board is full, i.e. there are no empty spaces left 
+    for moves.
 
     Args:
         board (numpy.ndarray): two dimensional array representing the board
-            after the move
 
     Returns:
-        bool: True if move results in a draw, False otherwise
+        bool: True if the board is full, False otherwise
     """
-    if EMPTY in board:
-        return False
-    else:
-        # Board is full so game is a draw
-        return True
+    return EMPTY not in board
 
 
 def board_str(board):
