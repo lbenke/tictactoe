@@ -27,9 +27,9 @@ class TicTacToe(object):
     def __init__(self, players, n=3, shuffle=False, logger=None):
         # Initialise the board and players
         self.board = np.zeros((n, n))
-        self.set_players(players)
         self.logger = logger
         self.shuffle = shuffle
+        self.set_players(players)
 
     def set_players(self, players):
         """
@@ -48,6 +48,10 @@ class TicTacToe(object):
         if len(players) != len(rules.sides):
             raise ValueError("Incorrect number of players, expected {0}.".
                     format(len(rules.sides)))
+
+        if self.shuffle:
+            random.shuffle(players)
+
         for player, side in zip(players, rules.sides):
             player.side = side
 
@@ -62,7 +66,24 @@ class TicTacToe(object):
         """
         return self.__players
 
-    def run(self):
+    def player(self, side):
+        """
+        Returns the player with the specified side.
+        
+        Args:
+            side (int): the side of the player
+             
+        Returns:
+            Player: the player matching the side, or None 
+        """
+        for player in self.__players:
+            if player.side == side:
+                return player
+
+        # No player found with the given side
+        return None
+
+    def run(self, board=None):
         """
         Executes a single run of the game.
 
@@ -71,12 +92,20 @@ class TicTacToe(object):
 
         The players are notified that the game is about to start, and again once
         the game has finished.
+                        
+        Args:
+            board (numpy.ndarray): optional two dimensional array representing 
+                the initial game board
 
         Returns:
             int: the side of the winning player, or None if there was a draw
         """
-        # Reset the game board
-        self.board.fill(rules.EMPTY)
+        # Use initial board state if provided
+        if board is not None:
+            self.board = board
+        else:
+            # Reset the game board
+            self.board.fill(rules.EMPTY)
 
         # Notify the players that the game is starting
         for player in self.players():
@@ -106,37 +135,40 @@ class TicTacToe(object):
 
         player_cycle = cycle(self.players())
 
+        # Request moves from each player until there is a win or draw
         for player in player_cycle:
             # Uncomment to log board state each turn
             # if self.logger:
             #     self.logger.debug(rules.board_str(self.board))
 
-            # Get the coordinates of the player's move
+            # Check for a win or draw
+            winning_side = rules.winner(self.board)
+            if winning_side is not None:
+                winner = self.player(winning_side)
+                if self.logger:
+                    self.logger.info("{2}\nGame over: {0} win ({1})".format(
+                            rules.side_name(winning_side),
+                            type(winner).__name__, rules.board_str(self.board)))
+                # Return the side of the winning player
+                return winning_side
+            elif rules.board_full(self.board):
+                # The board is full so the game concluded with a draw
+                if self.logger:
+                    self.logger.info("{0}\nGame over: Draw".format(
+                        rules.board_str(self.board)))
+                # Return None for a draw
+                return None
+
+            # Request a move from the player
             move = player.move(self.board.copy())
 
-            # Make the move if it is valid
+            # Apply the move if it is valid
             if rules.valid_move(self.board, move):
                 self.board[move] = player.side
             else:
                 if self.logger:
                     self.logger.fatal("Invalid move")
                 raise ValueError("Not a valid move: {0}".format(move))
-
-            # Check for a win or draw
-            if rules.winning_move(self.board):
-                if self.logger:
-                    self.logger.info("{2}\nGame over: {0} win ({1})".format(
-                            rules.side_name(player.side), type(player).__name__,
-                            rules.board_str(self.board)))
-                # Return winning player
-                return player.side
-            elif rules.board_full(self.board):
-                # The board is full so the game concluded with a draw
-                if self.logger:
-                    self.logger.info("{0}\nGame over: Draw".format(
-                        rules.board_str(self.board)))
-                # Return None for draw
-                return None
 
 
 def main():
@@ -151,7 +183,7 @@ def main():
     from agents.minimax import MiniMaxAgent
     agent = MiniMaxAgent(logger=logger)
 
-    # Set up the game
+    # Run the game
     game = TicTacToe([human, agent], shuffle=True, logger=logger)
     while True:
         game.run()
