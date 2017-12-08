@@ -24,62 +24,62 @@ class TestRules(TestCase):
         board = np.asarray([[1, -1, 1], [1, 1, -1], [-1, 1, 1]])
         self.assertTrue(rules.board_full(board))
 
-    def test_winning_moves(self):
+    def test_winner(self):
         # Empty board
         board = np.asarray([[0,0,0],[0,0,0],[0,0,0]])
-        self.assertFalse(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), None)
 
         # Diagonal
         board = np.asarray([[1, 0, 0], [-1, 1, 0], [1, 0, 1]])
-        self.assertTrue(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), 1)
         board = np.asarray([[-1, 0, 0], [-1, 1, 0], [1, 0, 1]])
-        self.assertFalse(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), None)
 
         # Anti-diagonal
         board = np.asarray([[0, 0, 1], [0, 1, -1], [1, -1, -1]])
-        self.assertTrue(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), 1)
         board = np.asarray([[0, 0, 1], [0, -1, -1], [1, -1, -1]])
-        self.assertFalse(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), None)
 
         # Opponent diagonal
         board = np.asarray([[-1, 0, 0], [0, -1, 0], [0, 0, -1]])
-        self.assertTrue(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), -1)
         board = np.asarray([[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
-        self.assertFalse(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), None)
 
         # Opponent anti-diagonal
         board = np.asarray([[0, 0, -1], [1, -1, 0], [-1, 0, 0]])
-        self.assertTrue(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), -1)
         board = np.asarray([[0, 0, 0], [1, -1, 0], [-1, 0, 0]])
-        self.assertFalse(rules.winning_move(board))
+        self.assertEqual(rules.winner(board), None)
 
         # Rows
         board = np.asarray([[1, 1, 1], [0, 0, 0], [0, 0, 0]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), 1)
         board = np.asarray([[1, 1, 1], [0, -1, 0], [0, 0, -1]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), 1)
         board = np.asarray([[0, 0, 0], [-1, -1, -1], [0, 0, 0]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), -1)
         board = np.asarray([[0, 0, 0], [0, 0, 0], [1, 1, 1]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), 1)
         board = np.asarray([[0, 0, 0], [0, 0, 0], [1, -1, 1]])
-        self.assertFalse(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), None)
         board = np.asarray([[1, 1, 1], [0, 0, 0], [1, -1, 1]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), 1)
 
         # Columns
         board = np.asarray([[1, 0, 0], [1, 0, 0], [1, 0, 0]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), 1)
         board = np.asarray([[1, -1, -1], [1, 0, 0], [-1, 0, 0]])
-        self.assertFalse(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), None)
         board = np.asarray([[0, -1, 0], [0, -1, 0], [0, -1, 0]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), -1)
         board = np.asarray([[0, 0, 1], [0, 0, 1], [0, 0, 1]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), 1)
         board = np.asarray([[-1, -1, 1], [0, 0, 1], [0, -1, 1]])
-        self.assertTrue(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), 1)
         board = np.asarray([[-1, -1, 1], [0, 0, 0], [0, -1, 1]])
-        self.assertFalse(rules.winning_move(np.asarray(board)))
+        self.assertEqual(rules.winner(board), None)
 
     def test_valid_move(self):
         board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
