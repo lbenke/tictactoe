@@ -64,7 +64,7 @@ def valid_move(board, move):
     return list(move) in rules.empty_cells(board).tolist()
 
 
-def winning_move(board):
+def winner(board):
     """
     Checks whether the given state represents a win for either player.
 
@@ -76,29 +76,48 @@ def winning_move(board):
             after the move
 
     Returns:
-        bool: True if the board represents a win, False otherwise
+        int: the side of winning player or None
     """
     n = board.shape[0]
 
     # Rows
     for x in range(0, n):
         if abs(board[x].sum()) == n:
-            return True
+            winning_side = board[x, 0]
+            return winning_side
 
     # Columns
     for y in range(0, n):
-        if abs(board[:,y].sum()) == n:
-            return True
+        if abs(board[:, y].sum()) == n:
+            winning_side = board[0, y]
+            return winning_side
 
     # Diagonal
     if abs(board.diagonal().sum()) == n:
-        return True
+        winning_side = board[0, 0]
+        return winning_side
 
     # Anti-diagonal
     if abs(np.fliplr(board).diagonal().sum()) == n:
-        return True
-    else:
-        return False
+        winning_side = board[0, n-1]
+        return winning_side
+
+    # No winner
+    return None
+
+
+def winning_move(board):
+    """
+    Checks whether the given state represents a win for either player.
+
+    Args:
+        board (numpy.ndarray): two dimensional array representing the board
+            after the move
+
+    Returns:
+        bool: True if the board represents a win, False otherwise
+    """
+    return winner(board) is not None
 
 
 def board_full(board):
