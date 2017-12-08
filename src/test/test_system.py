@@ -14,6 +14,8 @@ class TestSystem(TestCase):
         pass
 
     def test_game_result(self):
+        """Tests that the game returns the correct result when passed an initial
+        board with a win or draw state."""
         # Create the players
         human = Human()
         agent = MiniMaxAgent()
