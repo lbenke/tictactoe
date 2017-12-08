@@ -13,7 +13,7 @@ Game rules are defined in the `rules` module and may be modified to model
 different game types.
 
 A number of game players, including simple agents and an interactive player, are
-provided in the `Players` module. More complex agents are located in the 
+provided in the `players` module. More complex agents are located in the 
 `agents` subpackage.
 
  The game may be run interactively as follows:
@@ -36,6 +36,6 @@ states.
 #### Documentation format
 
 The documentation follows the Google Python docstring style for readability,
-and requires the Sphinx Napoleon extension for conversion to restructured text.
-See https://sphinxcontrib-napoleon.readthedocs.org/en/latest/ and
+and may require the Sphinx Napoleon extension for conversion to restructured 
+text. See https://sphinxcontrib-napoleon.readthedocs.org/en/latest/ and
 http://google.github.io/styleguide/pyguide.html#Comments

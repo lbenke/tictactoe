@@ -71,16 +71,20 @@ class Human(Player):
     """
     Player for human input via the command line.
         
-    Moves are specified using numpad 1-9 (1 is the bottom left cell and 9 is the
-    top right).
+    Moves are specified using the numbers 1 to 9, where 1 is the bottom left 
+    cell and 9 is the top right.
     """
     def move(self, board):
+        # Print the current game board
         print "\n{}".format(rules.board_str(board))
+
+        # Request a move from the player, repeating if the input is not valid
         while True:
             try:
                 num = int(raw_input("Cell (1-9): "))
                 if num not in range(1, 10):
                     continue
+                # Convert number 1-9 to x,y cell coordinates
                 cell = (int((9 - num) / 3), (num - 1) % 3)
             except ValueError:
                 continue
@@ -105,7 +109,8 @@ class RandomCellAgent(Player):
 
 
 class WinRandomCellAgent(Player):
-    """Agent that checks for a winning move."""
+    """Agent that exploits any winning moves, or otherwise chooses a cell at 
+    random."""
     def move(self, board):
         empty_cells = rules.empty_cells(board)
 
@@ -122,8 +127,8 @@ class WinRandomCellAgent(Player):
 
 
 class WinBlockRandomCellAgent(Player):
-    """Agent that checks for a winning move for itself, and blocks winning
-    moves for its opponent."""
+    """Agent that exploits any winning moves, blocks winning moves for its 
+    opponent, or otherwise chooses a cell at random."""
     def move(self, board):
         empty_cells = rules.empty_cells(board)
 
@@ -158,4 +163,3 @@ class OptimalRulesAgent(Player):
     """
     def move(self, board):
         raise NotImplementedError()
-        return None;
