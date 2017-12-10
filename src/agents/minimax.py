@@ -47,14 +47,15 @@ class MiniMaxAgent(Player):
         if len(empty_cells) == board.size:
             return None, (0, 0)
 
-        # Check if this move resulted in a win for either player (base case)
-        if rules.winning_move(board):
-            if player is self.side:
-                # Opponent won so return score for a loss
-                return -1, None
-            else:
+        # Check if this move resulted in a win or draw (base case)
+        winner = rules.winner(board)
+        if winner is not None:
+            if winner == self.side:
                 # Player won so return score for a win
                 return 1, None
+            else:
+                # Opponent won so return score for a loss
+                return -1, None
         elif rules.board_full(board):
             # Board is full so return score for a draw
             return 0, None
