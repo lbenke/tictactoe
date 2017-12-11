@@ -38,15 +38,19 @@ def batch_run(game, runs):
     total_played = 0
     results = ""
 
+    # Record player types
+    print "Player 1: {}, Player 2: {}".format(type(player_1).__name__,
+            type(player_2).__name__)
+
     # Batch run the game
     for _ in range(0, runs):
         winner = game.run()
 
         if not winner:
             total_draws += 1
-        elif winner is player_1.side:
+        elif winner == player_1.side:
             player_1_wins += 1
-        elif winner is player_2.side:
+        elif winner == player_2.side:
             player_2_wins += 1
         else:
             raise ValueError("Unexpected winner: {0}".format(winner))
@@ -55,11 +59,11 @@ def batch_run(game, runs):
         total_played += 1
         if total_played % 100 == 0:
             print "Total games: {}  Moving average: {}% {}% {}%  Bias={}  States={}".format(
-                    total_played, player_1_wins / 1, total_draws / 1, player_2_wins / 1,
+                    total_played, player_1_wins, total_draws, player_2_wins,
                     player_1.bias, len(player_1.state_values))
 
             results += "{}, {}, {}, {}\n".format(total_played,
-                player_1_wins / 1, total_draws / 1, player_2_wins / 1)
+                player_1_wins, total_draws, player_2_wins)
 
             total_draws = 0
             player_1_wins = 0
@@ -69,12 +73,6 @@ def batch_run(game, runs):
     # print "Agent state values:"
     # for array, value in player_1.state_values_list():
     #     print "{0}\nValue: {1}\n".format(rules.board_str(array), value)
-
-    # Print the training results
-    print "Player 1: {0}\nPlayer 2: {1}\nDraw: {2}\nTotal: {3}".format(
-        player_1_wins, player_2_wins, total_draws, total_played)
-    print "Number of states stored for Agent: {0}".format(len(
-        player_1.state_values))
 
     return results
 
@@ -92,7 +90,8 @@ def main():
 
     # Set up the game
     game = TicTacToe([agent, trainer], shuffle=False, logger=logger)
-    results = "Runs, Player 1, Draw, Player 2\n"
+    results = "Run, {}, Draws, {}".format(type(agent).__name__,
+            type(trainer).__name__)
 
     # Train the agent against the simple agent
     results += batch_run(game, 20000)
@@ -113,7 +112,7 @@ def main():
     agent.bias = 0
     trainer = MiniMaxAgent(logger=logger)
     game.set_players([agent, trainer])
-    results += batch_run(game, 300)
+    results += batch_run(game, 10)
 
     # Write results to file
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
