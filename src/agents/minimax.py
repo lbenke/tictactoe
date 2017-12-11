@@ -12,32 +12,27 @@ class MiniMaxAgent(Player):
 
     This agent will always choose the optimal move, but is comparatively slow to
     execute as it uses exhaustive search of the move tree.
-    
-    Note that there is no concept of depth; in cases where there all moves lead
-    eventually to a win, the agent chooses arbitrarily (e.g. it may ignore an 
-    obvious immediate winning move since it knows it will win eventually 
-    anyway). This also applies in reverse; if the agent is put in a position 
-    where all paths lead to a loss, it does not differentiate between losing 
-    immediately and losing in a number of moves, and may choose a move that 
-    loses immediately instead of one that keeps it in the game for longer.
-    This can be remedied by recording depth and favouring paths with more or 
-    less depth depending on the expected game result.
     """
 
     def move(self, board):
         return self.minimax(board, self.side)[1]
 
-    def minimax(self, board, player):
+    def minimax(self, board, player, depth=0):
         """
         Recursive method that returns the optimal next move and its value.
+        
+        The depth of the current move in the tree is recorded so that the agent 
+        can favour moves that win quicker (or lose slower) when there are 
+        multiple moves with the same expected game result.
 
         Args:
             state (numpy.ndarray): two dimensional array representing the
                 board state
             player (int): the side of the current player
+            depth (int): the depth of the move
 
         Returns:
-            retval (int): the return value of the move (1 for a win, 0 for a 
+            result (int): the return value of the move (1 for a win, 0 for a 
                 draw or -1 for a loss)
             next_move ((int, int)): the location of the optimal next move
         """
@@ -52,15 +47,15 @@ class MiniMaxAgent(Player):
         if winner is not None:
             if winner == self.side:
                 # Player won so return score for a win
-                return 1, None
+                return 100 - depth, None
             else:
                 # Opponent won so return score for a loss
-                return -1, None
+                return depth - 100, None
         elif rules.board_full(board):
             # Board is full so return score for a draw
             return 0, None
 
-        # Test child moves recursively and add results to the list
+        # Test each child move recursively and add results to the list
         results_list = []
         for cell in empty_cells:
             # Make the move
@@ -68,8 +63,8 @@ class MiniMaxAgent(Player):
             board[cell] = player
 
             # Get the value of this child move and add it to the results
-            retval, move = self.minimax(board, -player)
-            results_list.append(retval)
+            result, move = self.minimax(board, -player, depth + 1)
+            results_list.append(result)
 
             # Reverse the move
             board[cell] = rules.EMPTY
