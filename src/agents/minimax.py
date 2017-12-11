@@ -2,8 +2,8 @@
 This module contains agents that use minimax to select optimal moves.
 """
 
-import rules
 from players import Player
+import rules
 
 
 class MiniMaxAgent(Player):
