@@ -26,7 +26,7 @@ class TicTacToe(object):
     """
     def __init__(self, players, n=3, shuffle=False, logger=None):
         # Initialise the board and players
-        self.board = np.zeros((n, n))
+        self.board = np.zeros((n, n), dtype=np.int)
         self.logger = logger
         self.shuffle = shuffle
         self.set_players(players)
