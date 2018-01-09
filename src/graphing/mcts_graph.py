@@ -7,7 +7,7 @@ import networkx.drawing.nx_agraph as nxpgv
 import datetime
 
 
-def graph_mcts_tree(root_node, output_path=None, graph_type='dot',
+def graph_mcts_tree(root_node, output_path=None, layout='dot',
         label_ratios=True, edge_ratios=False,
         highlight_moves=True, monochrome=False):
     """
@@ -18,7 +18,7 @@ def graph_mcts_tree(root_node, output_path=None, graph_type='dot',
         root_node (TreeNode): the root node of the tree
         output_path (string): optional path to output file, default is current 
             directory
-        graph_type (string): graph layout to use when drawing, e.g. neato, dot, 
+        layout (string): graph layout to use when drawing, e.g. neato, dot, 
             twopi, circo, fdp, sfdp
         label_ratios: when true, an extra line is added to each node label with
             the score/visits ratio for that move
@@ -45,12 +45,12 @@ def graph_mcts_tree(root_node, output_path=None, graph_type='dot',
     a.node_attr['fillcolor'] = 'white'
     # a.graph_attr['bgcolor'] = 'transparent'
     # a.edge_attr['fontname'] = 'Courier New'
-    a.layout(prog=graph_type)
+    a.layout(prog=layout)
 
     # Create the output file
     if output_path is None:
         st = datetime.datetime.today().strftime('%Y%m%d_%H%M%S')
-        output_path = "tree_graph_{}_{}.png".format(st, graph_type)
+        output_path = "tree_graph_{}_{}.png".format(st, layout)
     a.draw(output_path)
 
 
