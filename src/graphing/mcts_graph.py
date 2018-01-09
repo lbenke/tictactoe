@@ -92,15 +92,15 @@ def create_label(tree_node, highlight_moves, monochrome, label_ratios):
     tree_node_string = tree_node.to_string()
     parent_node_string = tree_node.parent.to_string()
     for i in range(len(tree_node_string)):
-        if tree_node_string[i] == '\n':
-            # Replace '\n' with '<br/>' since we are using HTML-like labels
-            graph_node_label += '<br/>'
-        elif tree_node_string[i] != parent_node_string[i]:
+        if tree_node_string[i] != parent_node_string[i]:
             if monochrome:
                 graph_node_label += '<b>' + tree_node_string[i] + '</b>'
             else:
                 graph_node_label += '<font color="red">' + tree_node_string[
                     i] + '</font>'
+        elif tree_node_string[i] == '\n':
+            # Replace '\n' with '<br/>' since we are using HTML-like labels
+            graph_node_label += '<br/>'
         else:
             graph_node_label += tree_node_string[i]
     if label_ratios:
