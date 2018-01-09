@@ -7,7 +7,7 @@ import networkx.drawing.nx_agraph as nxpgv
 import datetime
 
 
-def graph_mcts_tree(root_node, output_path=None, graph_type='sfdp',
+def graph_mcts_tree(root_node, output_path=None, graph_type='dot',
         label_ratios=True, edge_ratios=False,
         highlight_moves=True, monochrome=False):
     """
