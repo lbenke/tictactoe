@@ -66,8 +66,10 @@ class MCTSAgent(Player):
                 current_node = current_node.parent
 
         # Visualise the tree
+        t = time.time()
         print "Generating graph..."
         graphing.graph_mcts_tree(current_node)
+        print "Time to generate graph: ", time.time() - t, "seconds"
 
         # Return move with highest score
         best_move = root_node.best_move()
@@ -109,10 +111,11 @@ if __name__ == "__main__":
     import numpy as np
     mcts_agent = MCTSAgent()
     mcts_agent.side = rules.CROSS
-    # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
     # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+    # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
     # board = np.asarray([[-1, 0, -1], [0, 0, 0], [0, 0, 0]])
     board = np.asarray([[-1, 1, 1], [0, -1, 0], [0, 1, 0]])
+    # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
     mcts_agent.move(board)
 
     # import logging

@@ -2,8 +2,7 @@
 This module contains tools for visualising MCTS graphs using networkx.
 """
 
-import networkx as nx
-import networkx.drawing.nx_agraph as nxpgv
+import pygraphviz as pgv
 import datetime
 
 
@@ -29,29 +28,29 @@ def graph_mcts_tree(root_node, output_path=None, layout='dot',
         monochrome (bool): when true highlighted characters are bold, when false
             they are red                
     """
-    # Create a networkx graph and add the nodes
-    g = nx.DiGraph()
-    build_graph(g, root_node, highlight_moves, monochrome,
-            label_ratios, edge_ratios)
+    # Create a pygraphviz graph and add the nodes
+    agraph = pgv.AGraph()
+    build_graph(agraph, root_node, highlight_moves, monochrome,
+        label_ratios, edge_ratios)
 
-    # Create graphviz graph and set display attributes
-    a = nxpgv.to_agraph(g)
-    a.node_attr['fixedsize'] = 'true'
-    a.node_attr['width'] = '1'
-    a.node_attr['height'] = '1'
-    a.node_attr['shape'] = 'square'
-    a.node_attr['fontname'] = 'Courier New'
-    a.node_attr['style'] = 'filled'
-    a.node_attr['fillcolor'] = 'white'
-    # a.graph_attr['bgcolor'] = 'transparent'
-    # a.edge_attr['fontname'] = 'Courier New'
-    a.layout(prog=layout)
+    # Set general display attributes
+    agraph.node_attr['fixedsize'] = 'true'
+    agraph.node_attr['width'] = '1'
+    agraph.node_attr['height'] = '1'
+    agraph.node_attr['shape'] = 'square'
+    agraph.node_attr['fontname'] = 'Courier New'
+    agraph.node_attr['style'] = 'filled'
+    agraph.node_attr['fillcolor'] = 'white'
+    # agraph.edge_attr['fontname'] = 'Courier New'
+    # agraph.graph_attr['bgcolor'] = 'transparent'
+    # agraph.graph_attr['splines'] = 'line'
+    agraph.layout(prog=layout)
 
     # Create the output file
     if output_path is None:
         st = datetime.datetime.today().strftime('%Y%m%d_%H%M%S')
         output_path = "tree_graph_{}_{}.png".format(st, layout)
-    a.draw(output_path)
+    agraph.draw(output_path)
 
 
 def build_graph(graph, tree_node, highlight_moves, monochrome,
