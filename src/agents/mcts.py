@@ -14,7 +14,7 @@ class MCTSAgent(Player):
     """
     Agent that uses Monte Carlo tree search (MCTS) to choose the next move.
     """
-    time_budget = 0.5  # number of seconds to build tree and choose move
+    time_budget = 1.0  # number of seconds to build tree and choose move
 
     def move(self, board):
         return self.mcts(board)
@@ -24,15 +24,10 @@ class MCTSAgent(Player):
             return True
 
     def mcts(self, board):
-        current_player = self.side
-        iterations_max = 200
-        iterations = 0
-
+        max_time = time.time() + MCTSAgent.time_budget
         root_node = TreeNode(board)
 
-        while iterations < iterations_max:  # change to time and/or move to inner loop
-            iterations += 1
-
+        while time.time() < max_time:
             # Pick tree root (current actual state)
             current_node = root_node
             current_player = self.side
@@ -62,13 +57,16 @@ class MCTSAgent(Player):
             while current_node is not root_node:
                 current_node.visits += 1
                 if winner == self.side:
-                    current_node.score += 1
+                    current_node.score += 1.0
                 elif winner == -self.side:
-                    current_node.score -= 1
+                    current_node.score += 0.0
+                else:
+                    current_node.score += 0.5
                 # Move up the tree
                 current_node = current_node.parent
 
         # Visualise the tree
+        print "Generating graph..."
         graphing.graph_mcts_tree(current_node)
 
         # Return move with highest score

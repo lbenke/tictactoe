@@ -96,8 +96,8 @@ def create_label(tree_node, highlight_moves, monochrome, label_ratios):
             if monochrome:
                 graph_node_label += '<b>' + tree_node_string[i] + '</b>'
             else:
-                graph_node_label += '<font color="red">' + tree_node_string[
-                    i] + '</font>'
+                graph_node_label += '<font color="red">' + tree_node_string[i] \
+                        + '</font>'
         elif tree_node_string[i] == '\n':
             # Replace '\n' with '<br/>' since we are using HTML-like labels
             graph_node_label += '<br/>'
