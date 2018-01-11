@@ -14,7 +14,7 @@ class MCTSAgent(Player):
     """
     Agent that uses Monte Carlo tree search (MCTS) to choose the next move.
     """
-    time_budget = 1.0  # number of seconds to build tree and choose move
+    time_budget = 0.10  # number of seconds to build tree and choose move
 
     def move(self, board):
         return self.mcts(board)
@@ -66,8 +66,8 @@ class MCTSAgent(Player):
                 current_node = current_node.parent
 
         # Visualise the tree
-        t = time.time()
         print "Generating graph..."
+        t = time.time()
         graphing.graph_mcts_tree(current_node)
         print "Time to generate graph: ", time.time() - t, "seconds"
 
@@ -113,8 +113,8 @@ if __name__ == "__main__":
     mcts_agent.side = rules.CROSS
     # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
-    # board = np.asarray([[-1, 0, -1], [0, 0, 0], [0, 0, 0]])
-    board = np.asarray([[-1, 1, 1], [0, -1, 0], [0, 1, 0]])
+    # board = np.asarray([[1, 0, 1], [0, 0, 0], [0, 0, 0]])
+    board = np.asarray([[1, -1, 1], [0, -1, 0], [0, 1, 0]])
     # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
     mcts_agent.move(board)
 
