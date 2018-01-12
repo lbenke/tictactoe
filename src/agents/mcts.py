@@ -118,7 +118,8 @@ if __name__ == "__main__":
     # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
     # board = np.asarray([[1, 0, 1], [0, 0, 0], [0, 0, 0]])
-    board = np.asarray([[1, -1, 1], [0, -1, 0], [0, 1, 0]])
+    # board = np.asarray([[1, -1, 1], [0, -1, 0], [0, 1, 0]])
+    board = np.asarray([[-1, 1, -1], [0, 1, 1], [0, -1, 0]])
     # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
     mcts_agent.move(board)
 
