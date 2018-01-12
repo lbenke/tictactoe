@@ -8,13 +8,14 @@ import time
 import random
 import graphing.mcts_graph as graphing
 import itertools
+import datetime
 
 
 class MCTSAgent(Player):
     """
     Agent that uses Monte Carlo tree search (MCTS) to choose the next move.
     """
-    time_budget = 0.10  # number of seconds to build tree and choose move
+    time_budget = 0.50  # number of seconds to build tree and choose move
 
     def move(self, board):
         return self.mcts(board)
@@ -68,7 +69,10 @@ class MCTSAgent(Player):
         # Visualise the tree
         print "Generating graph..."
         t = time.time()
-        graphing.graph_mcts_tree(current_node)
+        g = graphing.MCTSGraph(root_node=current_node)
+        timestamp = datetime.datetime.today().strftime('%Y%m%d_%H%M%S')
+        path = "tree_graph_{}.{}".format(timestamp, 'png')
+        g.draw_graph(path)
         print "Time to generate graph: ", time.time() - t, "seconds"
 
         # Return move with highest score

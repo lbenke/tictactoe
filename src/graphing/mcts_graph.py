@@ -6,139 +6,203 @@ import pygraphviz as pgv
 import datetime
 
 
-def graph_mcts_tree(root_node, output_path=None, layout='dot',
-        label_ratios=True, edge_ratios=False, highlight_moves=True,
-        monochrome=True, fill_colours=True, edge_colours=True,
-        border_colours=True, filetype='png'):
+class MCTSGraph(object):
     """
-    Generates a png file with a visualisation of the tree starting from the 
-    given root node.
+    This class generates a pygraphviz AGraph from a tree, and outputs the graph
+    in a number of formats.
     
-    Args:
-        root_node (TreeNode): the root node of the tree
-        output_path (string): optional path to output file, default is current 
-            directory
-        layout (string): graph layout to use when drawing, e.g. dot, neato, 
+    Example use:
+    >> g = graphing.MCTSGraph(root_node=tree.root_node)
+    >> g.draw_graph('output.png')
+
+    Attributes:
+        layout (string): graph layout to use when drawing, e.g. dot, neato,
             twopi, circo, fdp, sfdp
-        label_ratios: when true, an extra line is added to each node label with
+        node_ratios: when true, an extra line is added to each node label with
             the score/visits ratio for that move
-        edge_ratios: when true, a label is added to each edge with the 
+        edge_ratios: when true, a label is added to each edge with the
             score/visits ratio for that move
-        highlight_moves (bool): when true, a character in each node label is 
+        highlight_moves (bool): when true, a character in each node label is
             highlighted to show the move represented by that node
-        monochrome (bool): when true highlighted characters are bold, when false
-            they are red                
+        highlights_coloured (bool): when true highlighted characters are red,
+            when false they are bold
     """
-    # Create a pygraphviz graph and add the nodes
-    agraph = pgv.AGraph()
-    build_graph(agraph, root_node, highlight_moves, monochrome,
-        label_ratios, edge_ratios, fill_colours, edge_colours, border_colours)
 
-    # Set general display attributes
-    agraph.graph_attr['outputorder'] = 'edgesfirst'
-    agraph.node_attr['fixedsize'] = 'true'
-    agraph.node_attr['width'] = '1'
-    agraph.node_attr['height'] = '1'
-    agraph.node_attr['shape'] = 'square'
-    agraph.node_attr['fontname'] = 'Courier New'
-    agraph.node_attr['style'] = 'filled'
-    agraph.node_attr['fillcolor'] = 'white'
-    # agraph.node_attr['fillcolor'] = '0.0 0.0 0.96'
-    # agraph.graph_attr['bgcolor'] = '0.0 0.0 0.96'
-    # agraph.edge_attr['fontname'] = 'Courier New'
-    # agraph.graph_attr['bgcolor'] = 'transparent'
-    # agraph.graph_attr['splines'] = 'line'
-    agraph.layout(prog=layout)
+    def __init__(self, root_node=None, layout='dot', node_ratios=True,
+            edge_ratios=False, highlight_moves=True, highlights_coloured=False,
+            fill_colours=True, edge_colours=True, border_colours=True):
+        """
+        Constructor.
+        
+        Args:
+            root_node (TreeNode): the root node of the tree; if a root node is 
+                provided a new graph will be generated for it automatically, 
+                otherwise generate_graph must be called separately
+            output_path (string): optional path to output file, default is 
+                current directory
+            layout (string): graph layout to use when drawing, e.g. dot, neato,
+                twopi, circo, fdp, sfdp
+            node_ratios: when true, an extra line is added to each node label 
+                with the score/visits ratio for that move
+            edge_ratios: when true, a label is added to each edge with the
+                score/visits ratio for that move
+            highlight_moves (bool): when true, a character in each node label is
+                highlighted to show the move represented by that node
+            highlights_coloured (bool): when true highlighted characters are 
+                red, when false they are bold 
+        """
+        self.layout = layout
+        self.node_ratios = node_ratios
+        self.edge_ratios = edge_ratios
+        self.highlight_moves = highlight_moves
+        self.highlights_coloured = highlights_coloured
+        self.fill_colours = fill_colours
+        self.edge_colours = edge_colours
+        self.border_colours = border_colours
 
-    # Create the output file
-    if output_path is None:
-        st = datetime.datetime.today().strftime('%Y%m%d_%H%M%S')
-        output_path = "tree_graph_{}_{}.{}".format(st, layout, filetype)
-    agraph.draw(output_path)
+        # Generate the AGraph if a tree node was provided
+        self.agraph = self.generate_graph(root_node) if root_node else None
 
+    def generate_graph(self, root_node):
+        """
+        Generates a pygraphviz AGraph from the tree defined by the given root 
+        node.
+        
+        Args:
+            root_node (TreeNode): the root node of the tree
+                
+        Returns:
+            AGraph: the new AGraph of the tree
+        """
+        # Create a pygraphviz graph and add the nodes
+        self.agraph = pgv.AGraph()
+        self.__set_general_attrs()
+        self.__build_graph(root_node)
+        return self.agraph
 
-def build_graph(graph, tree_node, highlight_moves, monochrome,
-        label_ratios, edge_ratios, fill_colours, edge_colours, border_colours):
-    """Recursively adds child nodes to the graph until terminal nodes are 
-    reached."""
-    # Create a new graph node from the tree node
-    graph_node_label = create_label(tree_node, highlight_moves, monochrome,
-            label_ratios)
-    graph.add_node(tree_node.id, label=graph_node_label)
+    def draw_graph(self, path=None, format='png'):
+        """
+        Writes a representation of the graph to an output file in a specified
+        format, e.g. png, jpg, fig, gv, pdf, svg, gif, ps.
 
-    # Add an edge from this node to its parent
-    if tree_node.parent:
-        ratio = str('%.3f' % round(tree_node.ratio(), 3)) if edge_ratios else ''
-        graph.add_edge(tree_node.parent.id, tree_node.id, label=ratio)
+        Args:
+            path (string): the path to the output file; the format will 
+                be guessed from the extension, otherwise the format argument 
+                will be used
+            format (string): the format of the output file, used only if the 
+                format cannot be guessed from the extension of the output path
+                
+        Returns:
+            str: the graph representation as raw data if no path was 
+                specified, otherwise None
+        """
+        return self.agraph.draw(path=path, format=format, prog=self.layout)
 
-    if fill_colours:
-        node = graph.get_node(tree_node.id)
+    def __build_graph(self, tree_node):
+        """Builds the AGraph by adding the tree node and any child nodes 
+        recursively until terminal nodes are reached."""
+        # Create a new graph node from the tree node and add it to the graph
+        graph_node_label = self.__create_label(tree_node)
+        self.agraph.add_node(tree_node.id, label=graph_node_label)
+
+        # Add the edge from this node to its parent to the graph
         if tree_node.parent:
-            if edge_colours and not border_colours:
-                node.attr['fillcolor'] = str(
-                    tree_node.ratio() / 3.0) + ' 0.5 1.0'
+            ratio_label = ('%.3f' % round(tree_node.ratio(), 3) if
+                    self.edge_ratios else '')
+            self.agraph.add_edge(u=tree_node.parent.id, v=tree_node.id,
+                    label=ratio_label)
+
+        # Set the node and edge attributes
+        self.__set_attrs(tree_node)
+
+        # Sort the child nodes so they are rendered in order on the graph
+        child_nodes = tree_node.child_nodes.values()
+        child_nodes.sort(key=lambda x: x.ratio(), reverse=True)
+
+        # Add any child nodes to the graph
+        for child_node in child_nodes:
+            self.__build_graph(child_node)
+
+    def __set_general_attrs(self):
+        """
+        Set general graph display attributes.        
+        See https://www.graphviz.org/doc/info/attrs.html
+        """
+        self.agraph.graph_attr['outputorder'] = 'edgesfirst'
+        self.agraph.node_attr['fixedsize'] = 'true'
+        self.agraph.node_attr['width'] = '1'
+        self.agraph.node_attr['height'] = '1'
+        self.agraph.node_attr['shape'] = 'square'
+        self.agraph.node_attr['fontname'] = 'Courier New'
+        self.agraph.node_attr['style'] = 'filled'
+        self.agraph.node_attr['fillcolor'] = 'white'
+        # self.agraph.node_attr['fillcolor'] = '0.0 0.0 0.96'
+        # self.agraph.graph_attr['bgcolor'] = '0.0 0.0 0.96'
+        # self.agraph.edge_attr['fontname'] = 'Courier New'
+        # self.agraph.graph_attr['bgcolor'] = 'transparent'
+        # self.agraph.graph_attr['splines'] = 'line'
+
+    def __set_attrs(self, tree_node):
+        """
+        Set node and edge display attributes based on user preferences.
+        See https://www.graphviz.org/doc/info/attrs.html
+        """
+        if self.fill_colours:
+            node = self.agraph.get_node(tree_node.id)
+            if tree_node.parent:
+                h = str(tree_node.ratio() / 3.0)
+                s = 0.5 if self.edge_colours and not \
+                        self.border_colours else 0.25
+                node.attr['fillcolor'] = '{} {} {}'.format(h, s, 1.0)
             else:
-                node.attr['fillcolor'] = str(
-                    tree_node.ratio() / 3.0) + ' 0.25 1.0'
-        else:
-            node.attr['fillcolor'] = 'white'
+                node.attr['fillcolor'] = 'white'
 
-    if border_colours:
-        if tree_node.parent:
-            node = graph.get_node(tree_node.id)
-            node.attr['color'] = str(tree_node.ratio() / 3.0) + ' 1.0 1.0'
-        else:
-            node.attr['color'] = '0.0 0.0 0.5'
-
-    if edge_colours:
-        if tree_node.parent:
-            edge = graph.get_edge(tree_node.parent.id, tree_node.id)
-            edge.attr['color'] = str(tree_node.ratio() / 3.0) + ' 1.0 1.0'
-            if not border_colours:
-                edge.attr['penwidth'] = '3.0'
-
-    # Sort the child nodes so they are rendered in LR order on the graph
-    child_nodes = tree_node.child_nodes.values()
-    child_nodes.sort(key=lambda x: x.ratio(), reverse=True)
-
-    # Recursively add child nodes to the graph
-    for child_node in child_nodes:
-        build_graph(graph, child_node, highlight_moves, monochrome,
-                label_ratios, edge_ratios, fill_colours, edge_colours,
-                border_colours)
-
-
-def create_label(tree_node, highlight_moves, monochrome, label_ratios):
-    """Creates a label for the tree node, optionally including a ratio and using 
-    HTML-like syntax to highlight the new move."""
-    if tree_node.parent is None:
-        # Plain-text label for the root node
-        return tree_node.to_string()
-
-    if not highlight_moves:
-        # Plain-text label with optional ratio
-        ratio = str('\n%.3f' % round(tree_node.ratio(), 3)) if label_ratios else ''
-        return tree_node.to_string() + ratio
-
-    # HTML-like label highlighting the new move
-    graph_node_label = '<'
-    # Compare the current node to its parent to identify and highlight the move
-    tree_node_string = tree_node.to_string()
-    parent_node_string = tree_node.parent.to_string()
-    for i in range(len(tree_node_string)):
-        if tree_node_string[i] != parent_node_string[i]:
-            if monochrome:
-                graph_node_label += '<b>' + tree_node_string[i] + '</b>'
+        if self.border_colours:
+            node = self.agraph.get_node(tree_node.id)
+            if tree_node.parent:
+                h = str(tree_node.ratio() / 3.0)
+                node.attr['color'] = '{} {} {}'.format(h, 1.0, 1.0)
             else:
-                graph_node_label += '<font color="red">' + tree_node_string[i] \
-                        + '</font>'
-        elif tree_node_string[i] == '\n':
-            # Replace '\n' with '<br/>' since we are using HTML-like labels
-            graph_node_label += '<br/>'
-        else:
-            graph_node_label += tree_node_string[i]
-    if label_ratios:
-        ratio = str('<br/>%.3f' % round(tree_node.ratio(), 3))
-        graph_node_label += ratio
-    graph_node_label += '>'
-    return graph_node_label
+                node.attr['color'] = 'grey'
+
+        if self.edge_colours:
+            if tree_node.parent:
+                edge = self.agraph.get_edge(tree_node.parent.id, tree_node.id)
+                h = str(tree_node.ratio() / 3.0)
+                edge.attr['color'] = '{} {} {}'.format(h, 1.0, 1.0)
+                if not self.border_colours:
+                    edge.attr['penwidth'] = '3.0'
+
+    def __create_label(self, tree_node):
+        """Creates a label for the tree node, optionally including a ratio and 
+        HTML-like syntax to highlight the new move."""
+        if tree_node.parent is None:
+            # Plain-text label for the root node
+            return tree_node.to_string()
+
+        if not self.highlight_moves:
+            # Plain-text label with optional ratio
+            ratio = ('\n%.3f' % round(tree_node.ratio(), 3) if
+                    self.node_ratios else '')
+            return tree_node.to_string() + ratio
+
+        # HTML-like label highlighting the new move
+        graph_node_label = '<'
+        tree_node_string = tree_node.to_string()
+        parent_node_string = tree_node.parent.to_string()
+        for i in range(len(tree_node_string)):
+            if tree_node_string[i] != parent_node_string[i]:
+                # Character does not match parent so highlight it
+                highlighted = ('<font color="red">{}</font>' if
+                        self.highlights_coloured else '<b>{}</b>')
+                graph_node_label += highlighted.format(tree_node_string[i])
+            elif tree_node_string[i] == '\n':
+                # Replace '\n' with '<br/>' since we are using HTML-like labels
+                graph_node_label += '<br/>'
+            else:
+                graph_node_label += tree_node_string[i]
+        if self.node_ratios:
+            ratio = '<br/>%.3f' % round(tree_node.ratio(), 3)
+            graph_node_label += ratio
+        graph_node_label += '>'
+        return graph_node_label
