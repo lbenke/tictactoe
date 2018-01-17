@@ -27,6 +27,7 @@ class MCTSAgent(Player):
     def mcts(self, board):
         max_time = time.time() + MCTSAgent.time_budget
         root_node = TreeNode(board)
+        playout_count = 0
 
         while time.time() < max_time:
             # Pick tree root (current actual state)
@@ -65,6 +66,10 @@ class MCTSAgent(Player):
                     current_node.score += 0.5
                 # Move up the tree
                 current_node = current_node.parent
+
+            playout_count += 1
+
+        print "Number of MCTS playouts:", playout_count
 
         # Visualise the tree
         print "Generating graph..."
