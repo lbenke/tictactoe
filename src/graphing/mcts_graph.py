@@ -26,11 +26,13 @@ class MCTSGraph(object):
             highlighted to show the move represented by that node
         highlights_coloured (bool): when true highlighted characters are red,
             when false they are bold
+        sort_nodes (bool): when true the nodes in each rank are sorted by score
     """
 
     def __init__(self, root_node=None, layout='dot', node_ratios=True,
             edge_ratios=False, highlight_moves=True, highlights_coloured=False,
-            fill_colours=True, edge_colours=True, border_colours=True):
+            fill_colours=True, edge_colours=True, border_colours=True,
+            sort_nodes=True):
         """
         Constructor.
         
@@ -49,7 +51,9 @@ class MCTSGraph(object):
             highlight_moves (bool): when true, a character in each node label is
                 highlighted to show the move represented by that node
             highlights_coloured (bool): when true highlighted characters are 
-                red, when false they are bold 
+                red, when false they are bold
+            sort_nodes (bool): when true the nodes in each rank are sorted by 
+                score
         """
         self.layout = layout
         self.node_ratios = node_ratios
@@ -59,6 +63,7 @@ class MCTSGraph(object):
         self.fill_colours = fill_colours
         self.edge_colours = edge_colours
         self.border_colours = border_colours
+        self.sort_nodes = sort_nodes
 
         # Generate the AGraph if a tree node was provided
         self.agraph = self.generate_graph(root_node) if root_node else None
@@ -117,7 +122,8 @@ class MCTSGraph(object):
 
         # Sort the child nodes so they are rendered in order on the graph
         child_nodes = tree_node.child_nodes.values()
-        child_nodes.sort(key=lambda x: x.ratio(), reverse=True)
+        if self.sort_nodes:
+            child_nodes = sorted(child_nodes, key=lambda x: x.ratio())
 
         # Add any child nodes to the graph
         for child_node in child_nodes:
@@ -150,6 +156,7 @@ class MCTSGraph(object):
         if self.fill_colours:
             node = self.agraph.get_node(tree_node.id)
             if tree_node.parent:
+                # Map ratio to hue between green and red
                 h = str(tree_node.ratio() / 3.0)
                 s = 0.5 if self.edge_colours and not \
                         self.border_colours else 0.25
@@ -160,6 +167,7 @@ class MCTSGraph(object):
         if self.border_colours:
             node = self.agraph.get_node(tree_node.id)
             if tree_node.parent:
+                # Map ratio to hue between green and red
                 h = str(tree_node.ratio() / 3.0)
                 node.attr['color'] = '{} {} {}'.format(h, 1.0, 1.0)
             else:
@@ -167,8 +175,9 @@ class MCTSGraph(object):
 
         if self.edge_colours:
             if tree_node.parent:
-                edge = self.agraph.get_edge(tree_node.parent.id, tree_node.id)
+                # Map ratio to hue between green and red
                 h = str(tree_node.ratio() / 3.0)
+                edge = self.agraph.get_edge(tree_node.parent.id, tree_node.id)
                 edge.attr['color'] = '{} {} {}'.format(h, 1.0, 1.0)
                 if not self.border_colours:
                     edge.attr['penwidth'] = '3.0'
