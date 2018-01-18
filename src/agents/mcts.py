@@ -56,15 +56,15 @@ class MCTSAgent(Player):
 
             # Terminal state reached so backpropagate result
             winner = rules.winner(current_node.state)
+            if winner == self.side:
+                result = 1.0
+            elif winner == -self.side:
+                result = 0.0
+            else:
+                result = 0.5
             while current_node is not root_node:
                 current_node.visits += 1
-                if winner == self.side:
-                    current_node.score += 1.0
-                elif winner == -self.side:
-                    current_node.score += 0.0
-                else:
-                    current_node.score += 0.5
-                # Move up the tree
+                current_node.wins += result
                 current_node = current_node.parent
 
             playout_count += 1
@@ -94,21 +94,23 @@ class TreeNode(object):
         self.state = board
         self.parent = parent
         self.visits = 0;
-        self.score = 0;
+        self.wins = 0;
         self.child_nodes = {}
 
     def best_move(self):
         best_move = None
         for move in self.child_nodes:
-            if (best_move is None or self.child_nodes[move].ratio() >
-                    self.child_nodes[best_move].ratio()):
+            if (best_move is None or self.child_nodes[move].score() >
+                    self.child_nodes[best_move].score()):
                 best_move = move
 
         return best_move
 
-    def ratio(self):
+    def score(self):
+        """Returns the score for this node, the ratio of wins resulting from 
+        this node to the number of times it was visited."""
         if self.visits != 0:
-            return float(self.score) / float(self.visits)
+            return float(self.wins) / float(self.visits)
         else:
             return None
 

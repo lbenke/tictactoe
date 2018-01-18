@@ -18,10 +18,10 @@ class MCTSGraph(object):
     Attributes:
         layout (string): graph layout to use when drawing, e.g. dot, neato,
             twopi, circo, fdp, sfdp
-        node_ratios: when true, an extra line is added to each node label with
-            the score/visits ratio for that move
-        edge_ratios: when true, a label is added to each edge with the
-            score/visits ratio for that move
+        node_scores: when true, an extra line is added to each node label with
+            the score for that move
+        edge_scores: when true, a label is added to each edge with the score for
+            that move
         highlight_moves (bool): when true, a character in each node label is
             highlighted to show the move represented by that node
         highlights_coloured (bool): when true highlighted characters are red,
@@ -29,8 +29,8 @@ class MCTSGraph(object):
         sort_nodes (bool): when true the nodes in each rank are sorted by score
     """
 
-    def __init__(self, root_node=None, layout='dot', node_ratios=True,
-            edge_ratios=False, highlight_moves=True, highlights_coloured=False,
+    def __init__(self, root_node=None, layout='dot', node_scores=True,
+            edge_scores=False, highlight_moves=True, highlights_coloured=False,
             fill_colours=True, edge_colours=True, border_colours=True,
             sort_nodes=True):
         """
@@ -44,20 +44,20 @@ class MCTSGraph(object):
                 current directory
             layout (string): graph layout to use when drawing, e.g. dot, neato,
                 twopi, circo, fdp, sfdp
-            node_ratios: when true, an extra line is added to each node label 
-                with the score/visits ratio for that move
-            edge_ratios: when true, a label is added to each edge with the
-                score/visits ratio for that move
+            node_scores: when true, an extra line is added to each node label 
+                with the score for that move
+            edge_scores: when true, a label is added to each edge with the score
+                for that move
             highlight_moves (bool): when true, a character in each node label is
                 highlighted to show the move represented by that node
             highlights_coloured (bool): when true highlighted characters are 
                 red, when false they are bold
             sort_nodes (bool): when true the nodes in each rank are sorted by 
-                score
+                wins
         """
         self.layout = layout
-        self.node_ratios = node_ratios
-        self.edge_ratios = edge_ratios
+        self.node_scores = node_scores
+        self.edge_scores = edge_scores
         self.highlight_moves = highlight_moves
         self.highlights_coloured = highlights_coloured
         self.fill_colours = fill_colours
@@ -112,10 +112,10 @@ class MCTSGraph(object):
 
         # Add the edge from this node to its parent to the graph
         if tree_node.parent:
-            ratio_label = ('%.3f' % round(tree_node.ratio(), 3) if
-                    self.edge_ratios else '')
+            score_label = ('%.3f' % round(tree_node.score(), 3) if
+                    self.edge_scores else '')
             self.agraph.add_edge(u=tree_node.parent.id, v=tree_node.id,
-                    label=ratio_label)
+                    label=score_label)
 
         # Set the node and edge attributes
         self.__set_attrs(tree_node)
@@ -123,7 +123,7 @@ class MCTSGraph(object):
         # Sort the child nodes so they are rendered in order on the graph
         child_nodes = tree_node.child_nodes.values()
         if self.sort_nodes:
-            child_nodes = sorted(child_nodes, key=lambda x: x.ratio())
+            child_nodes = sorted(child_nodes, key=lambda x: x.score())
 
         # Add any child nodes to the graph
         for child_node in child_nodes:
@@ -156,8 +156,8 @@ class MCTSGraph(object):
         if self.fill_colours:
             node = self.agraph.get_node(tree_node.id)
             if tree_node.parent:
-                # Map ratio to hue between green and red
-                h = str(tree_node.ratio() / 3.0)
+                # Map score to hue between green and red
+                h = str(tree_node.score() / 3.0)
                 s = 0.5 if self.edge_colours and not \
                         self.border_colours else 0.25
                 node.attr['fillcolor'] = '{} {} {}'.format(h, s, 1.0)
@@ -167,33 +167,33 @@ class MCTSGraph(object):
         if self.border_colours:
             node = self.agraph.get_node(tree_node.id)
             if tree_node.parent:
-                # Map ratio to hue between green and red
-                h = str(tree_node.ratio() / 3.0)
+                # Map score to hue between green and red
+                h = str(tree_node.score() / 3.0)
                 node.attr['color'] = '{} {} {}'.format(h, 1.0, 1.0)
             else:
                 node.attr['color'] = 'grey'
 
         if self.edge_colours:
             if tree_node.parent:
-                # Map ratio to hue between green and red
-                h = str(tree_node.ratio() / 3.0)
+                # Map score to hue between green and red
+                h = str(tree_node.score() / 3.0)
                 edge = self.agraph.get_edge(tree_node.parent.id, tree_node.id)
                 edge.attr['color'] = '{} {} {}'.format(h, 1.0, 1.0)
                 if not self.border_colours:
                     edge.attr['penwidth'] = '3.0'
 
     def __create_label(self, tree_node):
-        """Creates a label for the tree node, optionally including a ratio and 
+        """Creates a label for the tree node, optionally including a score and 
         HTML-like syntax to highlight the new move."""
         if tree_node.parent is None:
             # Plain-text label for the root node
             return tree_node.to_string()
 
         if not self.highlight_moves:
-            # Plain-text label with optional ratio
-            ratio = ('\n%.3f' % round(tree_node.ratio(), 3) if
-                    self.node_ratios else '')
-            return tree_node.to_string() + ratio
+            # Plain-text label with optional score
+            score = ('\n%.3f' % round(tree_node.score(), 3) if
+                    self.node_scores else '')
+            return tree_node.to_string() + score
 
         # HTML-like label highlighting the new move
         graph_node_label = '<'
@@ -210,8 +210,8 @@ class MCTSGraph(object):
                 graph_node_label += '<br/>'
             else:
                 graph_node_label += tree_node_string[i]
-        if self.node_ratios:
-            ratio = '<br/>%.3f' % round(tree_node.ratio(), 3)
-            graph_node_label += ratio
+        if self.node_scores:
+            score = '<br/>%.3f' % round(tree_node.score(), 3)
+            graph_node_label += score
         graph_node_label += '>'
         return graph_node_label
