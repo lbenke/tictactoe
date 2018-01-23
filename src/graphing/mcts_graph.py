@@ -1,5 +1,5 @@
 """
-This module contains tools for visualising MCTS graphs using networkx.
+This module contains tools for visualising MCTS trees using Graphviz.
 """
 
 import pygraphviz as pgv
@@ -27,7 +27,13 @@ class MCTSGraph(object):
             highlighted to show the move represented by that node
         highlights_coloured (bool): when true highlighted characters are red,
             when false they are bold
+        fill_colours (bool): sets whether nodes are coloured by score
+        edge_colours (bool): sets whether edges are coloured by score
+        border_colours (bool): sets whether borders are coloured by score
         sort_nodes (bool): when true the nodes in each rank are sorted by score
+        verbose_score (bool): when true scores are displayed in the form 
+            wins/visits
+        transparent (bool): when true the background is set to transparent
     """
 
     def __init__(self, root_node=None, layout='dot', node_scores=True,
@@ -41,8 +47,6 @@ class MCTSGraph(object):
             root_node (TreeNode): the root node of the tree; if a root node is 
                 provided a new graph will be generated for it automatically, 
                 otherwise generate_graph must be called separately
-            output_path (string): optional path to output file, default is 
-                current directory
             layout (string): graph layout to use when drawing, e.g. dot, neato,
                 twopi, circo, fdp, sfdp
             node_scores: when true, an extra line is added to each node label 
@@ -53,11 +57,14 @@ class MCTSGraph(object):
                 highlighted to show the move represented by that node
             highlights_coloured (bool): when true highlighted characters are 
                 red, when false they are bold
+            fill_colours (bool): sets whether nodes are coloured by score
+            edge_colours (bool): sets whether edges are coloured by score
+            border_colours (bool): sets whether borders are coloured by score
             sort_nodes (bool): when true the nodes in each rank are sorted by 
                 wins
             verbose_score (bool): when true scores are displayed in the form 
                 wins/visits
-            transparent (bool): when true the background is set to transparent
+            transparent (bool): when true the background is set to transparent            
         """
         self.root_node = root_node
         self.layout = layout
