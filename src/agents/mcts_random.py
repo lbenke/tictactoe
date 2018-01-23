@@ -11,7 +11,7 @@ import itertools
 import datetime
 
 
-class MCTSRandomAgent(Player):
+class MCTSAgentRandom(Player):
     """
     Agent that uses Monte Carlo tree search (MCTS) to choose the next move.
     
@@ -31,7 +31,7 @@ class MCTSRandomAgent(Player):
             side (int): the player side, defined in the game rules
             logger (RootLogger): optional logger for output
         """
-        super(MCTSRandomAgent, self).__init__(side, logger)
+        super(MCTSAgentRandom, self).__init__(side, logger)
         self.time_budget = time_budget
         self.root_node = None
 
@@ -157,7 +157,7 @@ class TreeNode(object):
 
 if __name__ == "__main__":
     import numpy as np
-    mcts_agent = MCTSRandomAgent()
+    mcts_agent = MCTSAgentRandom()
     mcts_agent.side = rules.CROSS
     # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
     # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])

@@ -12,7 +12,7 @@ import datetime
 import math
 
 
-class MCTSAgent(Player):
+class MCTSAgentUCB1(Player):
     """
     Agent that uses Monte Carlo tree search (MCTS) to choose the next move.
 
@@ -36,7 +36,7 @@ class MCTSAgent(Player):
             side (int): the player side, defined in the game rules
             logger (RootLogger): optional logger for output
         """
-        super(MCTSAgent, self).__init__(side, logger)
+        super(MCTSAgentUCB1, self).__init__(side, logger)
         self.time_budget = time_budget
         self.root_node = None
         self.uctk = uctk
@@ -242,7 +242,7 @@ if __name__ == "__main__":
         # from agents.minimax import MiniMaxAgent
         # human = MiniMaxAgent()
 
-        mcts_agent = MCTSAgent(logger=logger)
+        mcts_agent = MCTSAgentUCB1(logger=logger)
 
         # Run the game
         game = TicTacToe([human, mcts_agent], shuffle=True, logger=logger)
@@ -253,7 +253,7 @@ if __name__ == "__main__":
     else:
         random.seed(7)
 
-        mcts_agent = MCTSAgent()
+        mcts_agent = MCTSAgentUCB1()
         mcts_agent.side = rules.CROSS
         # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
         # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
