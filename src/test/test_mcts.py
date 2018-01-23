@@ -7,7 +7,7 @@ from tictactoe import TicTacToe
 import numpy as np
 import rules
 from players import WinBlockRandomCellAgent
-from agents.mcts import MCTSAgent
+from agents.mcts import MCTSRandomAgent
 
 
 class TestMCTS(TestCase):

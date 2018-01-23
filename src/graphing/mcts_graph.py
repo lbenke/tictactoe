@@ -16,6 +16,7 @@ class MCTSGraph(object):
     >> g.draw_graph('output.png')
 
     Attributes:
+        root_node (TreeNode): the root node of the tree
         layout (string): graph layout to use when drawing, e.g. dot, neato,
             twopi, circo, fdp, sfdp
         node_scores: when true, an extra line is added to each node label with
@@ -32,7 +33,7 @@ class MCTSGraph(object):
     def __init__(self, root_node=None, layout='dot', node_scores=True,
             edge_scores=False, highlight_moves=True, highlights_coloured=False,
             fill_colours=True, edge_colours=True, border_colours=True,
-            sort_nodes=True):
+            sort_nodes=True, verbose_score=True, transparent=False):
         """
         Constructor.
         
@@ -54,7 +55,11 @@ class MCTSGraph(object):
                 red, when false they are bold
             sort_nodes (bool): when true the nodes in each rank are sorted by 
                 wins
+            verbose_score (bool): when true scores are displayed in the form 
+                wins/visits
+            transparent (bool): when true the background is set to transparent
         """
+        self.root_node = root_node
         self.layout = layout
         self.node_scores = node_scores
         self.edge_scores = edge_scores
@@ -64,6 +69,8 @@ class MCTSGraph(object):
         self.edge_colours = edge_colours
         self.border_colours = border_colours
         self.sort_nodes = sort_nodes
+        self.verbose_score = verbose_score
+        self.transparent = transparent
 
         # Generate the AGraph if a tree node was provided
         self.agraph = self.generate_graph(root_node) if root_node else None
@@ -112,7 +119,7 @@ class MCTSGraph(object):
 
         # Add the edge from this node to its parent to the graph
         if tree_node.parent:
-            score_label = ('%.3f' % round(tree_node.score(), 3) if
+            score_label = ('{0:.3f}'.format(round(tree_node.score(), 3)) if
                     self.edge_scores else '')
             self.agraph.add_edge(u=tree_node.parent.id, v=tree_node.id,
                     label=score_label)
@@ -120,7 +127,7 @@ class MCTSGraph(object):
         # Set the node and edge attributes
         self.__set_attrs(tree_node)
 
-        # Sort the child nodes so they are rendered in order on the graph
+        # Sort the children of this node so they are rendered in order of score
         child_nodes = tree_node.child_nodes.values()
         if self.sort_nodes:
             child_nodes = sorted(child_nodes, key=lambda x: x.score())
@@ -134,25 +141,26 @@ class MCTSGraph(object):
         Set general graph display attributes.        
         See https://www.graphviz.org/doc/info/attrs.html
         """
-        self.agraph.graph_attr['outputorder'] = 'edgesfirst'
+        if self.transparent:
+            self.agraph.graph_attr['bgcolor'] = 'transparent'
         self.agraph.node_attr['fixedsize'] = 'true'
-        self.agraph.node_attr['width'] = '1'
-        self.agraph.node_attr['height'] = '1'
+        if self.verbose_score and self.node_scores:
+            self.agraph.node_attr['width'] = '1.35'
+            self.agraph.node_attr['height'] = '1.35'
+        else:
+            self.agraph.node_attr['width'] = '1'
+            self.agraph.node_attr['height'] = '1'
+            self.agraph.graph_attr['outputorder'] = 'edgesfirst'
         self.agraph.node_attr['shape'] = 'square'
         self.agraph.node_attr['fontname'] = 'Courier New'
         self.agraph.node_attr['style'] = 'filled'
         self.agraph.node_attr['fillcolor'] = 'white'
-        # self.agraph.node_attr['fillcolor'] = '0.0 0.0 0.96'
-        # self.agraph.graph_attr['bgcolor'] = '0.0 0.0 0.96'
-        # self.agraph.edge_attr['fontname'] = 'Courier New'
-        # self.agraph.graph_attr['bgcolor'] = 'transparent'
-        # self.agraph.graph_attr['splines'] = 'line'
+        self.agraph.edge_attr['fontname'] = 'Courier New'
+        self.agraph.edge_attr['fontsize'] = '10'
 
     def __set_attrs(self, tree_node):
-        """
-        Set node and edge display attributes based on user preferences.
-        See https://www.graphviz.org/doc/info/attrs.html
-        """
+        """Set individual node and edge display attributes based on user 
+        preferences."""
         if self.fill_colours:
             node = self.agraph.get_node(tree_node.id)
             if tree_node.parent:
@@ -183,35 +191,49 @@ class MCTSGraph(object):
                     edge.attr['penwidth'] = '3.0'
 
     def __create_label(self, tree_node):
-        """Creates a label for the tree node, optionally including a score and 
-        HTML-like syntax to highlight the new move."""
-        if tree_node.parent is None:
-            # Plain-text label for the root node
-            return tree_node.to_string()
-
-        if not self.highlight_moves:
-            # Plain-text label with optional score
-            score = ('\n%.3f' % round(tree_node.score(), 3) if
-                    self.node_scores else '')
-            return tree_node.to_string() + score
-
-        # HTML-like label highlighting the new move
+        """Creates a label for the tree node, optionally including score details
+        and highlighting the new move represented by the node."""
         graph_node_label = '<'
-        tree_node_string = tree_node.to_string()
-        parent_node_string = tree_node.parent.to_string()
-        for i in range(len(tree_node_string)):
-            if tree_node_string[i] != parent_node_string[i]:
-                # Character does not match parent so highlight it
-                highlighted = ('<font color="red">{}</font>' if
-                        self.highlights_coloured else '<b>{}</b>')
-                graph_node_label += highlighted.format(tree_node_string[i])
-            elif tree_node_string[i] == '\n':
-                # Replace '\n' with '<br/>' since we are using HTML-like labels
-                graph_node_label += '<br/>'
+
+        # Add the node state to the label with highlighting if required
+        tree_node_str = str(tree_node).replace('\n', '<br/>')
+        if self.highlight_moves and tree_node.parent:
+            parent_node_str = str(tree_node.parent).replace('\n', '<br/>')
+            graph_node_label += self.__highlight_differences(
+                    tree_node_str, parent_node_str)
+        else:
+            graph_node_label += tree_node_str
+
+        # Add scores to the label if required
+        if self.node_scores and tree_node.parent:
+            score = '{0:.3f}'.format(round(tree_node.score(), 3))
+            if self.verbose_score:
+                graph_node_label += '<br/><font point-size="10">Wins: {}' \
+                        '<br/>Visits: {}<br/>Score: {}'.format(
+                        float(tree_node.wins), tree_node.visits, score)
+                if (hasattr(tree_node, 'ucb1_score') and
+                        tree_node.ucb1_score is not None):
+                    ucb1 = '{0:.3f}'.format(round(tree_node.ucb1_score, 3))
+                    graph_node_label += '<br/>UCB1: {}'.format(ucb1)
+                graph_node_label += '</font>'
             else:
-                graph_node_label += tree_node_string[i]
-        if self.node_scores:
-            score = '<br/>%.3f' % round(tree_node.score(), 3)
-            graph_node_label += score
+                graph_node_label += '<br/>{}'.format(score)
+
         graph_node_label += '>'
+
         return graph_node_label
+
+    def __highlight_differences(self, string1, string2):
+        """Highlights any characters that differ between two strings."""
+        highlighted_str = ""
+        for i in range(len(string1)):
+            if string1[i] != string2[i]:
+                # Character does not match parent so highlight it
+                if self.highlights_coloured:
+                    highlighted = '<font color="red">{}</font>'
+                else:
+                    highlighted = '<b>{}</b>'
+                highlighted_str += highlighted.format(string1[i])
+            else:
+                highlighted_str += string1[i]
+        return highlighted_str
