@@ -154,43 +154,62 @@ class TreeNode(object):
         this node."""
         return rules.board_str(self.state)
 
-
-if __name__ == "__main__":
-    import numpy as np
-    mcts_agent = MCTSAgentRandom()
-    mcts_agent.side = rules.CROSS
-    # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-    # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
-    # board = np.asarray([[1, 0, 1], [0, 0, 0], [0, 0, 0]])
-    # board = np.asarray([[1, -1, 1], [0, -1, 0], [0, 1, 0]])
-    board = np.asarray([[-1, 1, -1], [0, 1, 1], [0, -1, 0]])
-    # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
-    mcts_agent.move(board)
-
+def generate_graph(root_node):
     # Visualise the tree
     print "Generating graph..."
     t = time.time()
-    g = graphing.MCTSGraph(root_node=mcts_agent.root_node)
+
+    g = graphing.MCTSGraph()
+    # g.verbose_score = False
+    g.generate_graph(root_node)
+
     timestamp = datetime.datetime.today().strftime('%Y%m%d_%H%M%S')
     path = "tree_graph_{}.{}".format(timestamp, 'png')
     g.draw_graph(path)
+
     print "Time to generate graph: ", time.time() - t, "seconds"
-    #
-    # import logging
-    # import sys
-    # from tictactoe import TicTacToe
-    # # Set up the logger
-    # logger = logging.getLogger()
-    # logging.basicConfig(stream=sys.stdout, level=logging.INFO,
-    #     format="\n%(message)s")
-    #
-    # # Create the players
-    # from players import Human
-    # human = Human(logger=logger)
-    # from agents.mcts import MCTSAgent
-    # agent = MCTSAgent(logger=logger)
-    #
-    # # Run the game
-    # game = TicTacToe([human, agent], shuffle=True, logger=logger)
-    # while True:
-    #     game.run()
+
+if __name__ == "__main__":
+    import numpy as np
+
+    interactive = False
+
+    if interactive:
+        import logging
+        import sys
+        from tictactoe import TicTacToe
+        # Set up the logger
+        logger = logging.getLogger()
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO,
+            format="\n%(message)s")
+
+        # Create the players
+        from players import Human
+        human = Human(logger=logger)
+        # from agents.minimax import MiniMaxAgent
+        # human = MiniMaxAgent()
+
+        mcts_agent = MCTSAgentRandom(logger=logger)
+
+        # Run the game
+        game = TicTacToe([human, mcts_agent], shuffle=True, logger=logger)
+        while True:
+            game.run()
+            generate_graph(mcts_agent.root_node)
+
+    else:
+        random.seed(7)
+
+        mcts_agent = MCTSAgentRandom()
+        mcts_agent.side = rules.CROSS
+        board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+        # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
+        # board = np.asarray([[1, 0, -1], [0, 0, 0], [0, 0, 0]])
+        # board = np.asarray([[1, 0, -1], [0, 0, -1], [0, 0, 0]])
+        # board = np.asarray([[1, -1, 1], [0, -1, 0], [0, 1, 0]])
+        # board = np.asarray([[-1, 0, 1], [0, -1, 1], [-1, 1, 0]])
+        # board = np.asarray([[-1, 1, -1], [0, 1, 1], [0, -1, 0]])
+        # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
+        mcts_agent.move(board)
+
+        generate_graph(mcts_agent.root_node)

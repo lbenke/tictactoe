@@ -25,7 +25,7 @@ class MCTSAgentUCB1(Player):
         time_budget (float): number of seconds to build tree and choose move        
     """
 
-    def __init__(self, time_budget=0.5, uctk=math.sqrt(2),
+    def __init__(self, time_budget=0.10, uctk=math.sqrt(2),
             side=None, logger=None):
         """
         Constructor.
@@ -216,16 +216,21 @@ def generate_graph(root_node):
     # Visualise the tree
     print "Generating graph..."
     t = time.time()
-    g = graphing.MCTSGraph(root_node=root_node)
+
+    g = graphing.MCTSGraph()
+    # g.verbose_score = False
+    g.generate_graph(root_node)
+
     timestamp = datetime.datetime.today().strftime('%Y%m%d_%H%M%S')
     path = "tree_graph_{}.{}".format(timestamp, 'png')
     g.draw_graph(path)
+
     print "Time to generate graph: ", time.time() - t, "seconds"
 
 if __name__ == "__main__":
     import numpy as np
 
-    interactive = True
+    interactive = False
 
     if interactive:
         import logging
@@ -255,12 +260,13 @@ if __name__ == "__main__":
 
         mcts_agent = MCTSAgentUCB1()
         mcts_agent.side = rules.CROSS
-        # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+        board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
         # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
         # board = np.asarray([[1, 0, -1], [0, 0, 0], [0, 0, 0]])
+        # board = np.asarray([[1, 0, -1], [0, 0, -1], [0, 0, 0]])
         # board = np.asarray([[1, -1, 1], [0, -1, 0], [0, 1, 0]])
         # board = np.asarray([[-1, 0, 1], [0, -1, 1], [-1, 1, 0]])
-        board = np.asarray([[-1, 1, -1], [0, 1, 1], [0, -1, 0]])
+        # board = np.asarray([[-1, 1, -1], [0, 1, 1], [0, -1, 0]])
         # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
         mcts_agent.move(board)
 
