@@ -22,11 +22,12 @@ class MCTSAgentUCB1(Player):
         tree_root (TreeNode): the root node of the MCTS tree
         playout_count (int): total number of MCTS playouts, i.e. the number
                 of visits at the root node
-        time_budget (float): number of seconds to build tree and choose move        
+        time_budget (float): number of seconds to build tree and choose move
+        max_playouts (int): number of playouts to build tree and choose move
     """
 
-    def __init__(self, time_budget=0.10, uctk=math.sqrt(2),
-            side=None, logger=None):
+    def __init__(self, time_budget=0.50, max_playouts=1000000,
+            uctk=math.sqrt(2), side=None, logger=None):
         """
         Constructor.
 
@@ -38,6 +39,7 @@ class MCTSAgentUCB1(Player):
         """
         super(MCTSAgentUCB1, self).__init__(side, logger)
         self.time_budget = time_budget
+        self.max_playouts = max_playouts
         self.root_node = None
         self.uctk = uctk
 
@@ -49,8 +51,7 @@ class MCTSAgentUCB1(Player):
         self.root_node = UCTTreeNode(board, self.side)
         self.playout_count = 0
 
-        # while self.playout_count < 20:
-        while time.time() < max_time:
+        while time.time() < max_time and self.playout_count < self.max_playouts:
             # Start at tree root (current actual state)
             current_node = self.root_node
             current_player = self.side
@@ -259,15 +260,16 @@ if __name__ == "__main__":
         random.seed(7)
 
         mcts_agent = MCTSAgentUCB1()
+        mcts_agent.max_playouts = 100
         mcts_agent.side = rules.CROSS
-        board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+        # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
         # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
         # board = np.asarray([[1, 0, -1], [0, 0, 0], [0, 0, 0]])
         # board = np.asarray([[1, 0, -1], [0, 0, -1], [0, 0, 0]])
         # board = np.asarray([[1, -1, 1], [0, -1, 0], [0, 1, 0]])
         # board = np.asarray([[-1, 0, 1], [0, -1, 1], [-1, 1, 0]])
         # board = np.asarray([[-1, 1, -1], [0, 1, 1], [0, -1, 0]])
-        # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
+        board = np.asarray([[-1, 1, 1], [0, -1, 1], [1, -1, 0]])
         mcts_agent.move(board)
 
         generate_graph(mcts_agent.root_node)

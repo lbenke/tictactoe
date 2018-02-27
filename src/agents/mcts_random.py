@@ -19,10 +19,12 @@ class MCTSAgentRandom(Player):
     
     Attributes:
         time_budget (float): number of seconds to build tree and choose move
+        max_playouts (int): number of playouts to build tree and choose move
         tree_root (TreeNode): the root node of the MCTS tree
     """
 
-    def __init__(self, time_budget=0.10, side=None, logger=None):
+    def __init__(self, time_budget=0.50, max_playouts=1000000,
+            side=None, logger=None):
         """
         Constructor.
         
@@ -33,6 +35,7 @@ class MCTSAgentRandom(Player):
         """
         super(MCTSAgentRandom, self).__init__(side, logger)
         self.time_budget = time_budget
+        self.max_playouts = max_playouts
         self.root_node = None
 
     def move(self, board):
@@ -43,7 +46,7 @@ class MCTSAgentRandom(Player):
         root_node = TreeNode(board)
         playout_count = 0
 
-        while time.time() < max_time:
+        while time.time() < max_time and playout_count < self.max_playouts:
             # Start at tree root (current actual state)
             current_node = root_node
             current_player = self.side
@@ -201,15 +204,16 @@ if __name__ == "__main__":
         random.seed(7)
 
         mcts_agent = MCTSAgentRandom()
+        mcts_agent.max_playouts = 100
         mcts_agent.side = rules.CROSS
-        board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+        # board = np.asarray([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
         # board = np.asarray([[1, 0, 0], [0, -1, 0], [0, 1, 0]])
         # board = np.asarray([[1, 0, -1], [0, 0, 0], [0, 0, 0]])
         # board = np.asarray([[1, 0, -1], [0, 0, -1], [0, 0, 0]])
         # board = np.asarray([[1, -1, 1], [0, -1, 0], [0, 1, 0]])
         # board = np.asarray([[-1, 0, 1], [0, -1, 1], [-1, 1, 0]])
         # board = np.asarray([[-1, 1, -1], [0, 1, 1], [0, -1, 0]])
-        # board = np.asarray([[-1, 1, 1], [0, -1, 1], [-1, -1, 0]])
+        board = np.asarray([[-1, 1, 1], [0, -1, 1], [1, -1, 0]])
         mcts_agent.move(board)
 
         generate_graph(mcts_agent.root_node)
