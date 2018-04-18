@@ -21,13 +21,17 @@ class MCTSAgentUCB1(Player):
     Attributes:
         tree_root (TreeNode): the root node of the MCTS tree
         playout_count (int): total number of MCTS playouts, i.e. the number
-                of visits at the root node
+          of visits at the root node
         time_budget (float): number of seconds to build tree and choose move
         max_playouts (int): number of playouts to build tree and choose move
+        convergence_limit (int): returns the current best move if it has not 
+          changed after this number of iterations
+        utck (float): parameter controlling the exploration rate of the UCB1 
+          algorithm 
     """
 
     def __init__(self, time_budget=0.50, max_playouts=1000000,
-            uctk=math.sqrt(2), side=None, logger=None):
+            convergence_limit=1000, uctk=math.sqrt(2), side=None, logger=None):
         """
         Constructor.
 
@@ -40,92 +44,108 @@ class MCTSAgentUCB1(Player):
         super(MCTSAgentUCB1, self).__init__(side, logger)
         self.time_budget = time_budget
         self.max_playouts = max_playouts
-        self.root_node = None
+        self.convergence_limit = convergence_limit
         self.uctk = uctk
+        self.root_node = None
+        self.playout_count = 0
 
     def move(self, board):
-        return self.mcts(board)
+        # Return the first move in the list of optimal moves found
+        move = self.moves(board)[0]
+        return tuple(move)
 
-    def mcts(self, board):
+    def moves(self, board):
         max_time = time.time() + self.time_budget
         self.root_node = UCTTreeNode(board, self.side)
         self.playout_count = 0
+        best_moves = []
+        best_moves_repeats = 0
 
-        while time.time() < max_time and self.playout_count < self.max_playouts:
-            # Start at tree root (current actual state)
-            current_node = self.root_node
-            current_player = self.side
+        # Repeat MCTS algorithm until one of the stopping criteria has been met
+        while (time.time() < max_time and self.playout_count < self.max_playouts
+                and best_moves_repeats < self.convergence_limit):
+            self.mcts(board)
 
-            # Select
-            while current_node.child_nodes and not current_node.untried_moves:
-                # This node has been fully expanded (no untried moves) and is
-                # not terminal so use UCB1 to select a child and descend tree
-                ucb1 = lambda child: self.ucb1_score(child, current_player)
-                child_nodes = sorted(current_node.child_nodes.values(), key=ucb1)
+            # Update the list of best moves, incrementing the counter used to
+            # check convergence
+            new_best_moves = self.root_node.best_moves()
+            if new_best_moves == best_moves:
+                best_moves_repeats += 1
+            else:
+                best_moves_repeats = 0
+            best_moves = new_best_moves
 
-                # Choose move with highest UCB1 score after sorting
-                current_node = child_nodes[-1]
+        # Return moves with highest scores
+        return best_moves
+
+    def mcts(self, board):
+        # Start at tree root (current actual state)
+        current_node = self.root_node
+        current_player = self.side
+
+        # Select
+        while current_node.child_nodes and not current_node.untried_moves:
+            # This node has been fully expanded (no untried moves) and is
+            # not terminal so use UCB1 to select a child and descend tree
+            ucb1 = lambda child: self.ucb1_score(child, current_player)
+            child_nodes = sorted(current_node.child_nodes.values(), key=ucb1)
+
+            # Choose move with highest UCB1 score after sorting
+            current_node = child_nodes[-1]
+
+            # Swap players
+            current_player = -current_player
+
+        # Expand / rollout
+        if current_node.untried_moves != []:
+            # Now do a random playout since we don't have any
+            # information from this move on
+            while True:
+                # Check for terminal state
+                winner = rules.winner(current_node.state)
+                if winner or rules.board_full(current_node.state):
+                    break
+
+                # There are untried moves so pick one at random
+                move = current_node.untried_moves.pop(
+                    random.randrange(len(current_node.untried_moves)))
+                move = tuple(move)
+
+                # Note that usually only the first new move is added to the
+                # tree (i.e. one node per iteration) possibly to save space,
+                # not sure yet
+
+                # Add new node to the tree and remove from untried moves
+                new_board = current_node.state.copy()
+                new_board[move] = current_player  # apply the move
+                current_node.child_nodes[move] = UCTTreeNode(new_board,
+                    current_player, current_node)
+
+                # Move down the tree
+                current_node = current_node.child_nodes[move]
 
                 # Swap players
                 current_player = -current_player
 
-            # Expand / rollout
-            if current_node.untried_moves != []:
-                # Now do a random playout since we don't have any
-                # information from this move on
-                while True:
-                    # Check for terminal state
-                    winner = rules.winner(current_node.state)
-                    if winner or rules.board_full(current_node.state):
-                        break
+        # Backpropagate
+        # Terminal state reached so backpropagate result
+        winner = rules.winner(current_node.state)
+        while current_node:
+            current_node.visits += 1
+            if winner == self.side:
+                current_node.wins += 1
+            elif winner == -self.side:
+                current_node.wins += 0
+            else:
+                current_node.wins += 0.5
+            current_node = current_node.parent
 
-                    # There are untried moves so pick one at random
-                    move = current_node.untried_moves.pop(
-                            random.randrange(len(current_node.untried_moves)))
-                    move = tuple(move)
+        self.playout_count += 1
 
-                    # XXX:
-                    # Note that usually only the first new move is added to the
-                    # tree (i.e. one node per iteration) possibly to save space,
-                    # not sure yet
-
-                    # Add new node to the tree and remove from untried moves
-                    new_board = current_node.state.copy()
-                    new_board[move] = current_player  # apply the move
-                    current_node.child_nodes[move] = UCTTreeNode(new_board,
-                        current_player, current_node)
-
-                    # Move down the tree
-                    current_node = current_node.child_nodes[move]
-
-                    # Swap players
-                    current_player = -current_player
-
-            self.playout_count += 1
-
-            # Backpropagate
-            # Terminal state reached so backpropagate result
-            winner = rules.winner(current_node.state)
-            while current_node:
-                current_node.visits += 1
-                if winner == self.side:
-                    current_node.wins += 1
-                elif winner == -self.side:
-                    current_node.wins += 0
-                else:
-                    current_node.wins += 0.5
-                current_node = current_node.parent
-
-            # # Visualise the tree
-            # g = graphing.MCTSGraph(root_node=self.root_node, sort_nodes=False)
-            # path = "tree_graph_{}.{}".format(playout_count, 'png')
-            # g.draw_graph(path)
-
-        print "Number of MCTS playouts:", self.playout_count
-
-        # Return move with highest score
-        best_move = self.root_node.best_move()
-        return best_move
+        # # Visualise the tree
+        # g = graphing.MCTSGraph(root_node=self.root_node, sort_nodes=False)
+        # path = "tree_graph_{}.{}".format(playout_count, 'png')
+        # g.draw_graph(path)
 
     def ucb1_score(self, node, player):
         """Returns the UCB1 score for this node and updates the value in the 
@@ -183,21 +203,26 @@ class UCTTreeNode(object):
         self.untried_moves = rules.empty_cells(self.state).tolist()
         self.child_nodes = {}
 
-    def best_move(self):
+    def best_moves(self):
         """
-        Finds and returns the move leading to the child node with the highest
-        score.
+        Finds and returns the moves leading to the child nodes with the highest
+        scores.
 
         Returns:
-            (int, int): tuple with the coordinates of the new move (x, y)
+            [(int, int)]: list of tuples with the coordinates of the new move
         """
-        best_move = None
+        best_moves = []
         for move in self.child_nodes:
-            if (best_move is None or self.child_nodes[move].score() >
-                    self.child_nodes[best_move].score()):
-                best_move = move
-
-        return best_move
+            if not best_moves:
+                best_moves = [move]
+            else:
+                move_score = self.child_nodes[move].score()
+                best_score = self.child_nodes[best_moves[0]].score()
+                if move_score > best_score:
+                    best_moves = [move]
+                elif move_score == best_score:
+                    best_moves.append(move)
+        return best_moves
 
     def score(self):
         """Returns the score for this node, the ratio of wins resulting from 
