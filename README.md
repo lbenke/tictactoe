@@ -37,7 +37,7 @@ move may be generated using the `MCTSGraph` class:
 #### Analysis
 
 Analysis of the performance of different agent types is conducted using IPython 
-Notebooks in the `analysis` package (for example [MCTS vs minimax](tictactoe/src/analysis/mcts_vs_minimax.ipynb)).
+Notebooks in the `analysis` package (for example [MCTS vs minimax](src/analysis/mcts_vs_minimax.ipynb)).
 
 
 #### Game complexity
