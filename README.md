@@ -34,6 +34,12 @@ move may be generated using the `MCTSGraph` class:
 ![Example of visualisation of MCTS playout tree](mcts_tree_graph.png)
 
 
+#### Analysis
+
+Analysis of the performance of different agent types is conducted using IPython 
+Notebooks in the `analysis` package (for example [MCTS vs minimax](tictactoe/src/analysis/mcts_vs_minimax.ipynb)).
+
+
 #### Game complexity
 
 The upper bound on complexity (number of states) for a 3x3 board is 3^9 = 19,683
