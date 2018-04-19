@@ -35,7 +35,8 @@ def generate_random_board():
     return board, side
 
 board, side = generate_random_board()
-# board = np.asarray([[-1, 0, 1], [1, -1, 1], [0, 0, 0]])
+# board = np.asarray([[-1, -1, 0], [0, 0, 0], [0, 1, 0]])
+# side = 1
 print("Starting board ({} moves next):\n{}".format(
         rules.token(side), rules.board_str(board)))
 
@@ -46,24 +47,21 @@ t = time.time()
 _, minimax_moves = minimax_agent.minimax(board, minimax_agent.side)
 minimax_time = round(time.time() - t, 6)
 
-# Measure how long it takes for the MCTS agent to select any of the optimal
-# moves chosen by the minimax agent
-mcts_agent = MCTSAgentUCB1(convergence_limit=20)
+# Measure how long it takes the MCTS agent to find the optimal moves
+max_iterations = 2 * len(rules.empty_cells(board))**2  # the square of the number of free cells
+print "Convergence limit:", max_iterations
+mcts_agent = MCTSAgentUCB1(convergence_limit=max_iterations)
 mcts_agent.side = side
 t = time.time()
-# mcts_move = [None]
-# mcts_agent.root_node = UCTTreeNode(board, mcts_agent.side)
-# mcts_agent.playout_count = 0
-# minimax_moves = minimax_moves.tolist()
-# while not mcts_move in minimax_moves:
-#     mcts_agent.mcts(board)
-#     mcts_move = list(mcts_agent.root_node.best_move())
-#     print("Minimax: {}, MCTS: {}".format(minimax_moves, mcts_move))
 mcts_moves = mcts_agent.moves(board)
 mcts_time = round(time.time() - t, 6)
 
-print("Minimax: {}, MCTS: {}".format(minimax_moves, mcts_moves))
+print("Minimax: {}, MCTS: {}".format(minimax_moves.tolist(), mcts_moves))
 print "Number of MCTS playouts:", mcts_agent.playout_count
 
 print("Time to calculate optimal move {}:\n  Minimax\t{} s\n  MCTS\t\t{} s".
         format(mcts_moves, minimax_time, mcts_time))
+
+# Generate a graph
+# from agents import mcts_ucb1
+# mcts_ucb1.generate_graph(mcts_agent.root_node)
